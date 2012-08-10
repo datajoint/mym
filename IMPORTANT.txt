@@ -1,0 +1,19 @@
+AH 2007-10-03
+-------------
+
+Source code updated. Mym should always be compiled with the -largeArrayDims switch.
+
+AE 2007-08-29
+-------------
+
+There might be some issues with sparse matrices on 64bit machines. Read the 
+following article to find out what might be the problem: 
+
+http://www.mathworks.com/access/helpdesk/help/techdoc/index.html?/access/helpdesk/help/techdoc/rn/bqt6wtq.html&http://www.google.de/search?hl=en&q=largeArrayDims%20
+
+The switch -largeArrayDims could be the solution...
+
+JC 2008-07-30
+-------------
+
+Matlab has a default libz that it uses in the installation directory.  If you get errors and compressBound relating to libz, remove this file so it will use the one in your local machine
