@@ -7,6 +7,6 @@ MYM - Interact with a MySQL database server
        Copyright 2005, EPFL (Yannick Maret)
 
 Copyright notice: this code is a heavily modified version of the original
-work of Robert Almgren from University of Toronto [http://sourceforge.net/projects/mym/](sourceforge project)
+work of Robert Almgren from University of Toronto [sourceforge project](http://sourceforge.net/projects/mym/)
 
 See mym.m for further documentation.
