@@ -267,6 +267,34 @@ static double field2num(const char*s, enum_field_types t) {
     }
     return 0;
 }
+
+/**********************************************************************
+ *field2int():  Convert field in string format to integer number
+ **********************************************************************/
+static _int64 field2int(const char*s, enum_field_types t) {
+    if (!s) return NaN;  // MySQL null -- nothing there
+    if (IS_NUM(t)) {
+        _int64 val = 0;
+#ifdef _WINDOWS        
+        int scanRet = _sscanf_l(s, "%d", locUS, &val);
+#else
+        int scanRet = sscanf(s, "%ld", &val);
+#endif
+        if (scanRet < 1) {
+            //if (sscanf(s, "%lf", &val)!=1) {
+            mexPrintf("Unreadable value \"%s\" of type %s\n", s, typestr(t));
+            mexPrintf("strtod returns %g", std::strtod(s, 0));
+            return NaN;
+        }
+        return val;
+    }
+    else {
+        mexPrintf("Tried to convert \"%s\" of type %s to numeric\n", s, typestr(t));
+        mexErrMsgTxt("Internal inconsistency");
+    }
+    return 0;
+}
+
 /**********************************************************************
  *getstring():   Extract string from a Matlab array
  *   (Space allocated by mxCalloc() should be freed by Matlab
@@ -756,13 +784,25 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             mexErrMsgTxt("Unable to create structure for output");
         }
         mxFree(fieldnames);
+
         // Create temporary mxArray pointer array
-        mxArray* tmpPr;        
+        mxArray* tmpPr;
+
         //  Create the Matlab arrays for output        
-        double**pr = (double**) mxMalloc(nfield*sizeof(double*));
-        //    
+        double **pr = (double**) mxMalloc(nfield*sizeof(double*));
+        _int64 **i_pr = (_int64**) mxMalloc(nfield*sizeof(_int64*));
+
+        //  Create the individual output field arrays
         for (ulong j = 0; j<nfield; j++) {
-            if (can_convert(f[j].type)) {
+            if (f[j].type == FIELD_TYPE_LONGLONG) {
+                mwSize ndim = 2;
+                const mwSize dims[2] = {nrow, 1};
+                if( !(tmpPr = mxCreateNumericArray(ndim, dims, mxINT64_CLASS, mxREAL)) ) {
+                    mysql_free_result(res);
+                    mexErrMsgTxt("Unable to create numeric array for output");
+                }
+                i_pr[j] = (_int64*) mxGetData(tmpPr);
+            } else if (can_convert(f[j].type)) {
                 if (!(tmpPr = mxCreateDoubleMatrix(nrow, 1, mxREAL))) {
                     mysql_free_result(res);
                     mexErrMsgTxt("Unable to create numeric matrix for output");
@@ -795,7 +835,9 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             }
             unsigned long *p_lengths = mysql_fetch_lengths(res);
             for (ulong j = 0; j<nfield; j++) {
-                if (can_convert(f[j].type)) {
+                if (f[j].type == FIELD_TYPE_LONGLONG) {
+                    i_pr[j][i] = field2int(row[j], f[j].type);
+                } else if (can_convert(f[j].type)) {
                     pr[j][i] = field2num(row[j], f[j].type);
                 }
                 else if (f[j].type==FIELD_TYPE_BLOB) 
@@ -811,6 +853,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             }
         }
         mxFree(pr);
+        mxFree(i_pr);
         mysql_free_result(res);
     }
     else {

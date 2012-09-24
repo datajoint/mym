@@ -53,8 +53,10 @@ typedef unsigned char uchar;
 #ifdef __GNUC__
     #include <sys/types.h>
     #define _uint64 uint64_t
+    #define _int64  int64_t
 #elif _MSC_VER
     #define _uint64 unsigned __int64
+    #define _int64 __int64
 #else
     #error "I don't know how to declare a 64 bit uint for this compiler. Please fix!"
 #endif
