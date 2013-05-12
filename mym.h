@@ -57,6 +57,7 @@ typedef unsigned char uchar;
 #elif _MSC_VER
     #define _uint64 unsigned __int64
     #define _int64 __int64
+    #define _WINDOWS 1
 #else
     #error "I don't know how to declare a 64 bit uint for this compiler. Please fix!"
 #endif

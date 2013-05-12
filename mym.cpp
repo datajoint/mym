@@ -249,7 +249,7 @@ static double field2num(const char*s, enum_field_types t) {
     if (IS_NUM(t)) {
         double val = NaN;
 #ifdef _WINDOWS        
-        int scanRet = _sscanf_l(s, "%g", locUS, &val);
+        int scanRet = _sscanf_s_l(s, "%lf", locUS, &val);
 #else
         int scanRet = sscanf(s, "%lf", &val);
 #endif
@@ -276,7 +276,7 @@ static _int64 field2int(const char*s, enum_field_types t) {
     if (IS_NUM(t)) {
         _int64 val = 0;
 #ifdef _WINDOWS        
-        int scanRet = _sscanf_l(s, "%d", locUS, &val);
+        int scanRet = _sscanf_s_l(s, "%I64d", locUS, &val);
 #else
         int scanRet = sscanf(s, "%ld", &val);
 #endif
