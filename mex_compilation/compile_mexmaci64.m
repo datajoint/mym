@@ -12,4 +12,4 @@
 % I had to copy libmysql.16.0.0.dylib and libmysql.16.dylib from
 % /usr/local/mysql/lib into the main mym directory
 
-mex -g -v -largeArrayDims -I"/usr/local/mysql/include" -L"/usr/local/mysql/lib" -lz -lmysqlclient mym.cpp
+mex -g -v -largeArrayDims -I"/usr/local/mysql/include" -L"." -lz -lmysqlclient mym.cpp
