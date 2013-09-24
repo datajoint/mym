@@ -272,12 +272,14 @@ static double field2num(const char*s, enum_field_types t) {
  *field2int():  Convert field in string format to integer number
  **********************************************************************/
 static void field2int(const char*s, enum_field_types t, unsigned int flags, void* val) {
+    if (!s) {
+        mexErrMsgTxt("Invalid value NULL in a BIGINT column.");
+    }
     if (IS_NUM(t)) {
-    int scanRet = 0;
-    if (flags & UNSIGNED_FLAG) {
-        // Read unsigned 64 bit integer
-        _uint64 *val_typed = (_uint64*) val;
-        if (s) {
+        int scanRet = 0;
+        if (flags & UNSIGNED_FLAG) {
+            // Read unsigned 64 bit integer
+            _uint64 *val_typed = (_uint64*) val;
 #ifdef _WINDOWS        
             scanRet = _sscanf_s_l(s, "%I64u", locUS, val_typed);
 #else
@@ -285,23 +287,14 @@ static void field2int(const char*s, enum_field_types t, unsigned int flags, void
 #endif
         }
         else {
-            *val_typed = 0;
-        }
-    }
-    else {
-        // Read signed 64 bit integer
-        _int64 *val_typed = (_int64*) val;
-        if (s) {
+            // Read signed 64 bit integer
+            _int64 *val_typed = (_int64*) val;
 #ifdef _WINDOWS        
             scanRet = _sscanf_s_l(s, "%I64d", locUS, val_typed);
 #else
             scanRet = sscanf(s, "%ld", val_typed);
 #endif
         }
-        else {
-            *val_typed = 0;
-        }
-    }
         if (scanRet < 1) {
             mexPrintf("Unreadable value \"%s\" of type %s\n", s, typestr(t));
             mexPrintf("strtod returns %g", std::strtod(s, 0));
