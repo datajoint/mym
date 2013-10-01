@@ -1,14 +1,42 @@
-% RUN THIS FROM THE TOP LEVEL DIRECTORY, I.E. THE ONE THAT CONTAINS
-% 'mex_compilation'.
-% Build script for MYM using VC++ 2008.
-% Refer to the mexopts.bat in SVN for setup of paths
+function compile_windows()
+% Build script for MyM (32-bit and 64-bit Windows)
 
-% This script assumes
-% MySQL in "c:\Program Files\MySQL\MySQL Server 5.0"
+mym_base = fileparts(fileparts(mfilename('fullpath')));
+mym_src = fullfile(mym_base, 'src');
+build_out = fullfile(mym_base, 'build', mexext());
+distrib_out = fullfile(mym_base, 'distribution', mexext());
 
-p = mfilename('fullpath');
-ndx = strfind(p,filesep);
-optsFile = [p(1:ndx(end)) 'mexopts.bat']; % Compiler options file
-compileDir = p(1:ndx(end-1));
-cd(compileDir);   % Compilation has to be called from main dir
-eval(['mex -v -I. -I"F:\Program Files\MySQL\MySQL Server 5.5\include" -I".\zlib_windows\include" -L".\zlib_windows\lib" -L"F:\Program Files\MySQL\MySQL Server 5.5\lib\opt" -L.   -llibmysql -lzlib -lmysqlclient -lzlibwapi mym.cpp -v -f ',optsFile])
+% Set up input and output directories
+mysql_base = fullfile(mym_base, 'mysql-connector');
+mysql_include = fullfile(mysql_base, 'include');
+mysql_platform_include = fullfile(mysql_base, ['include_' mexext()]);
+mysql_lib = fullfile(mysql_base, ['lib_' mexext()]);
+zlib_base = fullfile(mym_base, 'zlib');
+zlib_include = fullfile(zlib_base, 'include');
+
+lib = fullfile(mym_base, 'lib', mexext());
+
+mkdir(build_out);
+mkdir(distrib_out);
+oldp = cd(build_out);
+pwd_reset = onCleanup(@() cd(oldp));
+
+mex( ...
+    '-v', ...
+    '-largeArrayDims', ...
+    sprintf('-I"%s"', mysql_include), ...
+    sprintf('-I"%s"', mysql_platform_include), ...
+    sprintf('-I"%s"', zlib_include), ...
+    sprintf('-L"%s"', mysql_lib), ...
+    sprintf('-L"%s"', lib), ...
+	'-llibmysql', ...
+    '-lmysqlclient', ...
+    '-lzlib', ...
+    ...%'-lzlibwapi', ...
+    fullfile(mym_src, 'mym.cpp'));
+
+% -llibmysql -lzlib -lmysqlclient -lzlibwapi
+
+% Pack mex with all dependencies into distribution directory
+copyfile(['mym.' mexext()], distrib_out);
+copyfile(fullfile(mysql_lib, '*.dll'), distrib_out);

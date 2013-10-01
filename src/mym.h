@@ -40,12 +40,8 @@ typedef unsigned char uchar;
 #endif
 
 #include <mex.h>  //  Definitions for Matlab API
-
-#define ZLIB_WINAPI 
 #include <zlib.h>
-
 #include <math.h>
-
 #include "matrix.h"
 
 // We need a platform- and compiler-independent (rofl) fixed size 64 bit integer
