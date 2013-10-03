@@ -12,7 +12,7 @@ mysql_include = fullfile(mysql_base, 'include');
 mysql_platform_include = fullfile(mysql_base, ['include_' mexext()]);
 mysql_lib = fullfile(mysql_base, ['lib_' mexext()]);
 zlib_base = fullfile(mym_base, 'zlib');
-zlib_include = fullfile(zlib_base, 'include');
+zlib_include = fullfile(zlib_base, ['include_' mexext()]);
 
 lib = fullfile(mym_base, 'lib', mexext());
 
@@ -32,10 +32,7 @@ mex( ...
 	'-llibmysql', ...
     '-lmysqlclient', ...
     '-lzlib', ...
-    ...%'-lzlibwapi', ...
     fullfile(mym_src, 'mym.cpp'));
-
-% -llibmysql -lzlib -lmysqlclient -lzlibwapi
 
 % Pack mex with all dependencies into distribution directory
 copyfile(['mym.' mexext()], distrib_out);
