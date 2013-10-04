@@ -846,7 +846,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                 } else if (can_convert(f[j].type)) {
                     pr[j][i] = field2num(row[j], f[j].type);
                 }
-                else if (f[j].type==FIELD_TYPE_BLOB) 
+                else if ((f[j].type==FIELD_TYPE_BLOB) && (f[j].charsetnr==63))
                 {
                     tmpPr=mxGetField(plhs[0],0,f[j].name);
                     mxSetCell(tmpPr, i, deserialize(row[j], p_lengths[j]));
