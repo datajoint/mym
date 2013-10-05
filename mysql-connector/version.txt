@@ -1,0 +1,2 @@
+The MySQL/C connectors are all version 6.1.1 and were downloaded from the 
+MySQL developer zone: http://dev.mysql.com/downloads/connector/c/#downloads

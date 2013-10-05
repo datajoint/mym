@@ -1,15 +1,39 @@
-% RUN THIS FROM THE TOP LEVEL DIRECTORY, I.E. THE ONE THAT CONTAINS
-% 'mex_compilation'.
+function compile_mexmaci64()
+% Build script for MyM (64-bit Mac OS X)
+% For Mac, we can rely on the system zlib. It has been at version >= 1.2.3
+% since OS X 10.4
 
-% System info:
-%   Mac OS X 10.6 (Snow Leopard)
-%   GCC 4.0 (installed via XCode)
-%   mexopts.bat set to use /Developer/SDKs/MacOSX10.6
-%   MySQL client 5.5.9 in /usr/local/mysql
+mym_base = fileparts(fileparts(mfilename('fullpath')));
+mym_src = fullfile(mym_base, 'src');
+build_out = fullfile(mym_base, 'build', mexext());
+distrib_out = fullfile(mym_base, 'distribution', mexext());
 
-% I had to delete unistd.h in the main mym directory
+% Set up input and output directories
+mysql_base = fullfile(mym_base, 'mysql-connector');
+mysql_include = fullfile(mysql_base, 'include');
+mysql_platform_include = fullfile(mysql_base, ['include_' mexext()]);
+mysql_lib = fullfile(mysql_base, ['lib_' mexext()]);
 
-% I had to copy libmysql.16.0.0.dylib and libmysql.16.dylib from
-% /usr/local/mysql/lib into the main mym directory
+mkdir(build_out);
+mkdir(distrib_out);
+oldp = cd(build_out);
+pwd_reset = onCleanup(@() cd(oldp));
 
-mex -g -v -largeArrayDims -I"/usr/local/mysql/include" -L"." -lz -lmysqlclient mym.cpp
+mex( ...
+    '-v', ...
+    '-largeArrayDims', ...
+    sprintf('-I"%s"', mysql_include), ...
+    sprintf('-I"%s"', mysql_platform_include), ...
+    sprintf('-L"%s"', mysql_lib), ...
+	'-lmysqlclient', ...
+	'-lz', ...
+    fullfile(mym_src, 'mym.cpp'));
+
+% Change libmysql reference to mym mex directory
+system(['install_name_tool -change "libmysqlclient.18.dylib" ' ...
+    '"@loader_path/libmysqlclient.18.dylib" ' ...
+    fullfile(build_out, ['mym.' mexext()])]);
+
+% Pack mex with all dependencies into distribution directory
+copyfile(['mym.' mexext()], distrib_out);
+copyfile(fullfile(mysql_lib, 'libmysqlclient*'), distrib_out);

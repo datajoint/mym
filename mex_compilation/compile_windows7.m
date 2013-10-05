@@ -1,1 +1,0 @@
-mex -v -largeArrayDims -DWIN64 -D_WIN64 -DMATLAB_MEX_FILE -D__USE_LARGEFILE64 -I. -I"C:\Program Files\MySQL\MySQL Server 5.5\include" -I".\zlib_windows\include" -L. -L".\zlib_windows\lib" -llibmysql -lzlib -lmysqlclient mym.cpp "C:\Program Files\MySQL\MySQL Server 5.5\lib\libmysql.lib" "C:\Program Files\MySQL\MySQL Server 5.5\lib\mysqlclient.lib"
