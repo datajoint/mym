@@ -1581,7 +1581,7 @@ static void getSerialFct(const char* rpt, const mxArray* rparg, pfserial& rpf, b
   if (*pt==PH_MATLAB) {
     // this placeholder results in a serialized version of array, cell or structure 
     rpec = true;
-    if (mxIsNumeric(rparg)||mxIsChar(rparg))
+    if (mxIsNumeric(rparg) || mxIsChar(rparg) || mxIsLogical(rparg))
       rpf = &serializeArray;
     else if (mxIsCell(rparg))
       rpf = &serializeCell;
