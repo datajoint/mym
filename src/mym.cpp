@@ -614,8 +614,20 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         //******************PLACEHOLDER PROCESSING******************
         // global placeholders variables and constant
         const unsigned nex = nrhs-jarg-1;	// expected number of placeholders
+        unsigned query_flags = 0;
+        unsigned nb_flags = 0;
         unsigned nac = 0;									// actual number
         size_t lq = strlen(query);	// original query length, needed at some point
+        // Check for presence of query flags. This needs to be expanded once we have additional flags
+        for (int i=nrhs-1; i > jarg; --i) {
+            if (mxIsChar(prhs[i]) && (strcasecmp(getstring(prhs[i]), ML_FLAG_BIGINT_TO_DOUBLE)==0)) {
+                ++nb_flags;
+            }
+            else {
+                break;
+            }
+        }
+
         if (nex) {
             // local placeholders variables and constant
             char** po = 0;								// pointer to placeholders openning symbols
@@ -636,9 +648,13 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                     nac++;
                 }
             nac--;
-            // some error checks
-            if (nac!=nex)
+            // Adjust placeholders based on the number of flags present
+            if ((nac < nex) && (nac >= (nex-nb_flags))) {
+                nb_flags = nex-nac;
+            }
+            else if (nac != nex) {
                 mexErrMsgTxt("The number of placeholders differs from that of additional arguments!");
+            }
             // now we have the correct number of placeholders
             // read the types and in-string arguments
             ps = (unsigned*)mxCalloc(nac, sizeof(unsigned));
@@ -665,7 +681,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             size_t nb = 0;
             for (unsigned i = 0; i<nac; i++) {
                 // serialize individual field
-				pd[i] = pf[i](plen[i], prhs[jarg+i+1], pa[i], true);
+                pd[i] = pf[i](plen[i], prhs[jarg+i+1], pa[i], true);
                 if (pec[i]&&plen[i]>MIN_LEN_ZLIB) {
                     // compress field
                     const uLongf max_len = compressBound(plen[i]);
@@ -684,9 +700,9 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                         memcpy(pd[i], (const char*)ZLIB_ID, LEN_ZLIB_ID);
                         *(pd[i]+LEN_ZLIB_ID) = 0;
 
-			*((_uint64*)(pd[i]+LEN_ZLIB_ID+1)) = (_uint64) len_old;
-			memcpy(pd[i]+LEN_ZLIB_ID+1+sizeof(_uint64), pcmp, len);
-			//BUG: *((_uint64*)(pd[i]+LEN_ZLIB_ID+1+sizeof(_uint64))) = (_uint64) len;
+                        *((_uint64*)(pd[i]+LEN_ZLIB_ID+1)) = (_uint64) len_old;
+                        memcpy(pd[i]+LEN_ZLIB_ID+1+sizeof(_uint64), pcmp, len);
+                        //BUG: *((_uint64*)(pd[i]+LEN_ZLIB_ID+1+sizeof(_uint64))) = (_uint64) len;
                     }
                 }
                 nb += plen[i];
@@ -725,6 +741,13 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             if (p_tmp_o||p_tmp_c)
                 mexErrMsgTxt("The query contains placeholders, but no additional arguments!");
         }
+        // Process flags
+        for (int i=nrhs-nb_flags; i < nrhs; ++i) {
+            if  (strcasecmp(getstring(prhs[i]), ML_FLAG_BIGINT_TO_DOUBLE)==0) {
+                query_flags |= FLAG_BIGINT_TO_DOUBLE;
+            }
+        }
+
         //  Execute the query (data stays on server)
         if (nac!=0) {
             if (mysql_real_query(conn, query, lq))
@@ -805,7 +828,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
 
         //  Create the individual output field arrays
         for (ulong j = 0; j<nfield; j++) {
-            if (f[j].type == FIELD_TYPE_LONGLONG) {
+            if ((f[j].type == FIELD_TYPE_LONGLONG) && !(query_flags & FLAG_BIGINT_TO_DOUBLE)){
                 const mwSize ndim = 2;
                 const mwSize dims[2] = {nrow, 1};
                 mxClassID integer_class = (f[j].flags & UNSIGNED_FLAG) ? mxUINT64_CLASS : mxINT64_CLASS;
@@ -841,7 +864,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             }
             unsigned long *p_lengths = mysql_fetch_lengths(res);
             for (ulong j = 0; j<nfield; j++) {
-                if (f[j].type == FIELD_TYPE_LONGLONG) {
+                if ((f[j].type == FIELD_TYPE_LONGLONG) && !(query_flags & FLAG_BIGINT_TO_DOUBLE)) {
                     field2int(row[j], f[j].type, f[j].flags, &i_pr[j][i]);
                 } else if (can_convert(f[j].type)) {
                     pr[j][i] = field2num(row[j], f[j].type);

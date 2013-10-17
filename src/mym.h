@@ -167,7 +167,7 @@ const size_t LEN_ZLIB_ID = strlen(ZLIB_ID);
 typedef char* (*pfserial)(size_t &, const mxArray*, const char*, const bool);
 
 // Query flags passed from Matlab to mym
-const char ML_FLAG_BIGINT_TO_DOUBLE = "bigint_to_double";
+const char ML_FLAG_BIGINT_TO_DOUBLE[] = "bigint_to_double";
 enum CMD_FLAGS {
     FLAG_BIGINT_TO_DOUBLE = 1
 };
