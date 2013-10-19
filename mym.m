@@ -90,6 +90,14 @@
 %            as the "abc{dfg}h" is mistaken for a mYm command. A possible
 %            solution is to use the following command:
 %             mym(INSERT INTO tbl(id,txt) VALUES(1000,"{S}")','abc{dfg}h');
+%
+% mym('version')
+% --------------
+% Displays the version of mym when no output arguments are given.
+% With a single output argument, a struct with the fields 'major',
+% 'minor' and 'bugfix' is returned. These fields contain numeric
+% scalars corresponding to the version major.minor.bugfix
+%
 % HISTORY
 % -------
 % v1.36   - fixed bug for Linux64 related to cross-platform compatibility. Blobs written on windows can be read under 

@@ -31,6 +31,12 @@
 #ifndef MY_MAT_H
 #define MY_MAT H
 
+// mym version information
+#define MYM_VERSION_MAJOR 2
+#define MYM_VERSION_MINOR 6
+#define MYM_VERSION_BUGFIX 8
+
+
 // some local defintion
 #ifndef ulong
 typedef unsigned long ulong;

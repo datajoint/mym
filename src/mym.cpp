@@ -364,7 +364,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         mexPrintf("cid = %d  jarg = %d\n", cid, jarg);
     /*********************************************************************/
     //  Parse the result based on the first argument
-    enum querytype { OPEN, CLOSE, CLOSE_ALL, USE, STATUS, CMD } q;
+    enum querytype { OPEN, CLOSE, CLOSE_ALL, USE, STATUS, CMD, VERSION } q;
     char*query = NULL;
     if (nrhs<=jarg)
         q = STATUS;
@@ -382,6 +382,8 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             q = USE;
         else if (!strcasecmp(query, "status"))
             q = STATUS;
+        else if (!strcasecmp(query, "version"))
+            q = VERSION;
         else q = CMD;
     }
     //  Check that the arguments are all character strings
@@ -401,6 +403,8 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             mexPrintf("q = USE\n");
         if (q==STATUS)
             mexPrintf("q = STATUS\n");
+        if (q==VERSION)
+            mexPrintf("q = VERSION\n");
         if (q==CMD)
             mexPrintf("q = CMD\n");
     }
@@ -884,6 +888,23 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         mxFree(pr);
         mxFree(i_pr);
         mysql_free_result(res);
+    }
+    else if (q == VERSION) {
+        if (nrhs > (jarg+1))
+            mexErrMsgTxt("Version command does not take additional inputs");
+        if (nlhs == 0) {
+            mexPrintf("mYm version %d.%d.%d\n", MYM_VERSION_MAJOR, MYM_VERSION_MINOR,
+                MYM_VERSION_BUGFIX);
+        } else if (nlhs == 1) {
+            const char* versionFields[] = {"major", "minor", "bugfix"};
+            plhs[0] = mxCreateStructMatrix(1, 1, sizeof(versionFields) / sizeof(*versionFields),
+                versionFields);
+            mxSetFieldByNumber(plhs[0], 0, 0, mxCreateDoubleScalar(MYM_VERSION_MAJOR));
+            mxSetFieldByNumber(plhs[0], 0, 1, mxCreateDoubleScalar(MYM_VERSION_MINOR));
+            mxSetFieldByNumber(plhs[0], 0, 2, mxCreateDoubleScalar(MYM_VERSION_BUGFIX));
+        } else {
+            mexErrMsgTxt("Zero or one output arguments allowed for version command");
+        }
     }
     else {
         mexPrintf("Unknown query type q = %d\n", q);
