@@ -254,9 +254,7 @@ static double field2num(const char*s, enum_field_types t) {
         int scanRet = sscanf(s, "%lf", &val);
 #endif
         if (scanRet < 1) {
-            //if (sscanf(s, "%lf", &val)!=1) {
             mexPrintf("Unreadable value \"%s\" of type %s\n", s, typestr(t));
-            mexPrintf("strtod returns %g", std::strtod(s, 0));
             return NaN;
         }
         return val;
@@ -297,7 +295,6 @@ static void field2int(const char*s, enum_field_types t, unsigned int flags, void
         }
         if (scanRet < 1) {
             mexPrintf("Unreadable value \"%s\" of type %s\n", s, typestr(t));
-            mexPrintf("strtod returns %g", std::strtod(s, 0));
         }
     }
     else {
