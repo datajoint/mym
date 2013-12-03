@@ -640,7 +640,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             // LOOK FOR THE PLACEHOLDERS
             po = (char**)mxCalloc(nex+1, sizeof(char*));
             pc = (char**)mxCalloc(nex+1, sizeof(char*));
-            if (po[nac++] = strstr(query, PH_OPEN))
+            if ((po[nac++] = strstr(query, PH_OPEN)))
                 while (po[nac-1]&&nac<=nex) {
                     pc[nac-1] = strstr(po[nac-1]+1, PH_CLOSE);
                     if (pc[nac-1]==0)
@@ -942,7 +942,7 @@ char* serializeStruct(size_t &rnBytes, const mxArray *rpArray, const char *rpArg
 	    bool isWeCreatedAnEmptyMatrix=false;
 	    mxArray* fakeEmptyMatrix;
 	    pf = mxGetFieldByNumber(rpArray, i, j);
-	    if ((pf==NULL))
+	    if (pf==NULL)
 	    {
 		    // sometimes, matlab returns null, for good and empty
 		    // elements. the reasons for this are unknown
