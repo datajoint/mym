@@ -281,7 +281,7 @@ static void field2int(const char*s, enum_field_types t, unsigned int flags, void
 #ifdef _WINDOWS        
             scanRet = _sscanf_s_l(s, "%I64u", locUS, val_typed);
 #else
-            scanRet = sscanf(s, "%lu", val_typed);
+            scanRet = sscanf(s, "%lu", (unsigned long *) val_typed);
 #endif
         }
         else {
@@ -290,7 +290,7 @@ static void field2int(const char*s, enum_field_types t, unsigned int flags, void
 #ifdef _WINDOWS        
             scanRet = _sscanf_s_l(s, "%I64d", locUS, val_typed);
 #else
-            scanRet = sscanf(s, "%ld", val_typed);
+            scanRet = sscanf(s, "%ld", (unsigned long *) val_typed);
 #endif
         }
         if (scanRet < 1) {
