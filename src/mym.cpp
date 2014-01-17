@@ -163,7 +163,7 @@ static void fancyprint(MYSQL_RES*res) {
     char**fmt = (char**) mxMalloc(nfield*sizeof(char*));
     for (ulong j = 0; j<nfield; j++) {
         fmt[j] = (char*) mxCalloc(10, sizeof(char));
-        sprintf(fmt[j], "  %%-%lu ", len[j]);
+        sprintf(fmt[j], "  %%-%lus ", len[j]);
     }
     /************************************************************************/
     //  Now print the actual data
