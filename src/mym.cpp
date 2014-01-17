@@ -57,8 +57,8 @@ typedef size_t mwIndex;
 // Macro to write fixed size 64 bit uints
 #define WRITE_UINT64(p,val) do{  *((_uint64*)(p)) = (_uint64)(val);    (p) += sizeof(_uint64);  }while(0)
 #define WRITE_UINT64S(p,val,n) do{     _uint64* pTemp = (_uint64*) (p); \
-				    for (size_t i=0; i < (n); ++i) { pTemp[i] = (_uint64)val[i]; } \
-				    p += (n) * sizeof(_uint64);  }while(0)
+                    for (size_t i=0; i < (n); ++i) { pTemp[i] = (_uint64)val[i]; } \
+                    p += (n) * sizeof(_uint64);  } while(0)
 
 /**********************************************************************
  *typestr(s):  Readable translation of MySQL field type specifier
@@ -116,8 +116,8 @@ static const char*typestr(enum_field_types t) {
             return "string";
         case FIELD_TYPE_GEOMETRY:
             return "geometry";   // not in manual 4.0
-            default:
-                return "unknown";
+        default:
+            return "unknown";
     }
 }
 /**********************************************************************
@@ -195,7 +195,8 @@ static void fancyprint(MYSQL_RES*res) {
                 }
                 for (ulong j = 0; j<nfield; j++)
                     mexPrintf(fmt[j], (row[j] ? row[j] : ""));
-                    mexPrintf("\n"); }
+                mexPrintf("\n");
+            }
         }
         else {
             //  print half at beginning, half at end
@@ -208,7 +209,7 @@ static void fancyprint(MYSQL_RES*res) {
                 }
                 for (ulong j = 0; j<nfield; j++)
                     mexPrintf(fmt[j], (row[j] ? row[j] : ""));
-                    mexPrintf("\n");
+                mexPrintf("\n");
             }
             for (ulong j = 0; j<nfield; j++)
                 mexPrintf(fmt[j], contstr);
@@ -222,7 +223,7 @@ static void fancyprint(MYSQL_RES*res) {
                 }
                 for (ulong j = 0; j<nfield; j++)
                     mexPrintf(fmt[j], (row[j] ? row[j] : ""));
-                    mexPrintf("\n");
+                mexPrintf("\n");
             }
             mexPrintf("(%d rows total)\n", nrow);
         }
@@ -236,13 +237,13 @@ static void fancyprint(MYSQL_RES*res) {
 /**********************************************************************
  *field2num():  Convert field in string format to double number
  **********************************************************************/
-const double NaN = mxGetNaN();				//  Matlab NaN for null values
+const double NaN = mxGetNaN();              //  Matlab NaN for null values
 static bool can_convert(enum_field_types t) {
-    return (IS_NUM(t)&&
-    (t!=FIELD_TYPE_DATE)&&
-    (t!=FIELD_TYPE_TIME)&&
-    (t!=FIELD_TYPE_DATETIME)&&
-    (t!=FIELD_TYPE_TIMESTAMP));
+    return (IS_NUM(t) &&
+        (t!=FIELD_TYPE_DATE) &&
+        (t!=FIELD_TYPE_TIME) &&
+        (t!=FIELD_TYPE_DATETIME) &&
+        (t!=FIELD_TYPE_TIMESTAMP));
 }
 static double field2num(const char*s, enum_field_types t) {
     if (!s) return NaN;  // MySQL null -- nothing there
@@ -342,7 +343,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
     // *********** 
 
     // Parse the first argument to see if it is a specific id number
-    if (nrhs!=0&&mxIsNumeric(prhs[0]))	{
+    if (nrhs!=0&&mxIsNumeric(prhs[0]))  {
         if (mxGetM(prhs[0])!=1||mxGetN(prhs[0])!=1) {
             mexPrintf("Usage:  %s([id], command, [ host, user, password ])\n", mexFunctionName());
             mexPrintf("First argument is array %d x %d\n", mxGetM(prhs[0]), mxGetN(prhs[0]));
@@ -365,7 +366,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
     char*query = NULL;
     if (nrhs<=jarg)
         q = STATUS;
-    else{
+    else {
         if (!mxIsChar(prhs[jarg]))
             mexErrMsgTxt("The command string is missing!");
         query = getstring(prhs[jarg]);
@@ -381,7 +382,8 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             q = STATUS;
         else if (!strcasecmp(query, "version"))
             q = VERSION;
-        else q = CMD;
+        else
+            q = CMD;
     }
     //  Check that the arguments are all character strings
     if (q!=CMD)
@@ -527,7 +529,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             *mxGetPr(plhs[0]) = 1.;
         }
     }
-    else if (q==STATUS)	{
+    else if (q==STATUS) {
         // GET CONNECTION STATUS
         ////////////////////////
         if (nlhs<1) {
@@ -556,7 +558,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                     mexPrintf("No connections open\n");
                     return;
                 }
-                if (nconn==1&&c[0].isopen) {
+                if ((nconn==1) && (c[0].isopen)) {
                     // Only connection number zero is open
                     // Give simple report with no connection id #
                     if (mysql_ping(conn)) {
@@ -614,11 +616,11 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         }
         //******************PLACEHOLDER PROCESSING******************
         // global placeholders variables and constant
-        const unsigned nex = nrhs-jarg-1;	// expected number of placeholders
+        const unsigned nex = nrhs-jarg-1;   // expected number of placeholders
         unsigned query_flags = 0;
         unsigned nb_flags = 0;
-        unsigned nac = 0;									// actual number
-        size_t lq = strlen(query);	// original query length, needed at some point
+        unsigned nac = 0;                                   // actual number
+        size_t lq = strlen(query);  // original query length, needed at some point
         // Check for presence of query flags. This needs to be expanded once we have additional flags
         for (int i=nrhs-1; i > jarg; --i) {
             if (mxIsChar(prhs[i]) && (strcasecmp(getstring(prhs[i]), ML_FLAG_BIGINT_TO_DOUBLE)==0)) {
@@ -631,12 +633,12 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
 
         if (nex) {
             // local placeholders variables and constant
-            char** po = 0;								// pointer to placeholders openning symbols
-            char** pc = 0;								// pointer to placeholders closing symbols
+            char** po = 0;                              // pointer to placeholders openning symbols
+            char** pc = 0;                              // pointer to placeholders closing symbols
             bool*  pec = 0;               // pointer to 'enable compression field'
-            char** pa = 0;								// pointer to placeholder in-string argument
-            unsigned* ps = 0;							// pointer to placeholders size (in bytes)
-            pfserial* pf = 0;							// pointer to serialization function
+            char** pa = 0;                              // pointer to placeholder in-string argument
+            unsigned* ps = 0;                           // pointer to placeholders size (in bytes)
+            pfserial* pf = 0;                           // pointer to serialization function
             // LOOK FOR THE PLACEHOLDERS
             po = (char**)mxCalloc(nex+1, sizeof(char*));
             pc = (char**)mxCalloc(nex+1, sizeof(char*));
@@ -796,7 +798,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         }
         //  If we are here, he wants output
         //  He must give exactly the right number of output arguments
-        if (nlhs!=1)	{
+        if (nlhs!=1) {
             mysql_free_result(res);
             mexPrintf("You specified %d output arguments, and got %d columns of data\n", nlhs, nfield);
             mexErrMsgTxt("Must give one output argument");
@@ -920,7 +922,7 @@ char* serializeStruct(size_t &rnBytes, const mxArray *rpArray, const char *rpArg
     if (rhead)
         rnBytes += (ulong)LEN_ID_MATLAB+1;
 
-	// get number of fields and their names
+    // get number of fields and their names
     const int nfields = mxGetNumberOfFields(rpArray);
     rnBytes += sizeof(int);
     const char** pname = (const char**)mxCalloc(nfields, sizeof(char*));
@@ -931,44 +933,44 @@ char* serializeStruct(size_t &rnBytes, const mxArray *rpArray, const char *rpArg
         rnBytes += fnl[i]+1;
     }
 
-	// loop through each element of the array and serialize it
+    // loop through each element of the array and serialize it
     const mwSize nelts = mxGetNumberOfElements(rpArray);
     char** pser = (char**)mxCalloc(nelts*nfields, sizeof(char*));
     size_t* plen = (size_t*)mxCalloc(nelts*nfields, sizeof(size_t));
     const mxArray* pf;
     unsigned li = 0;
     for (int i = 0; i<nelts; i++) {
-	for (int j = 0; j<nfields; j++) {
-	    bool isWeCreatedAnEmptyMatrix=false;
-	    mxArray* fakeEmptyMatrix;
-	    pf = mxGetFieldByNumber(rpArray, i, j);
-	    if (pf==NULL)
-	    {
-		    // sometimes, matlab returns null, for good and empty
-		    // elements. the reasons for this are unknown
-		    // so we create an empty double matrix, to overcome it
-		    fakeEmptyMatrix=mxCreateDoubleMatrix((mwSize)0,(mwSize)0,mxREAL);
-		    pf=fakeEmptyMatrix;
-		    isWeCreatedAnEmptyMatrix=true;
-	    }
-	    if (mxIsSparse(pf)) {
-		    pser[li] = serializeSparse(plen[li], pf, rpArg, false);
-	    } else if (mxIsNumeric(pf) || mxIsLogical(pf) || mxIsChar(pf)) {
-		    pser[li] = serializeArray(plen[li], pf, rpArg, false);
-	    } else if (mxIsStruct(pf)) {
-		    pser[li] = serializeStruct(plen[li], pf, rpArg, false);
-	    } else if (mxIsCell(pf)) {
-		    pser[li] = serializeCell(plen[li], pf, rpArg, false);
-	    } else {
-		    mexErrMsgTxt("unsupported type");
-	    }
-	    rnBytes += plen[li]+sizeof(_uint64);
-	    li++;
-	    if (isWeCreatedAnEmptyMatrix)
-		    mxDestroyArray(fakeEmptyMatrix);
-	}
+        for (int j = 0; j<nfields; j++) {
+            bool isWeCreatedAnEmptyMatrix=false;
+            mxArray* fakeEmptyMatrix;
+            pf = mxGetFieldByNumber(rpArray, i, j);
+            if (pf==NULL)
+            {
+                // sometimes, matlab returns null, for good and empty
+                // elements. the reasons for this are unknown
+                // so we create an empty double matrix, to overcome it
+                fakeEmptyMatrix=mxCreateDoubleMatrix((mwSize)0,(mwSize)0,mxREAL);
+                pf=fakeEmptyMatrix;
+                isWeCreatedAnEmptyMatrix=true;
+            }
+            if (mxIsSparse(pf)) {
+                pser[li] = serializeSparse(plen[li], pf, rpArg, false);
+            } else if (mxIsNumeric(pf) || mxIsLogical(pf) || mxIsChar(pf)) {
+                pser[li] = serializeArray(plen[li], pf, rpArg, false);
+            } else if (mxIsStruct(pf)) {
+                pser[li] = serializeStruct(plen[li], pf, rpArg, false);
+            } else if (mxIsCell(pf)) {
+                pser[li] = serializeCell(plen[li], pf, rpArg, false);
+            } else {
+                mexErrMsgTxt("unsupported type");
+            }
+            rnBytes += plen[li]+sizeof(_uint64);
+            li++;
+            if (isWeCreatedAnEmptyMatrix)
+                mxDestroyArray(fakeEmptyMatrix);
+        }
     }
-	
+    
     // put together the partial serializations
     char* p_serial = (char*)mxCalloc(rnBytes, sizeof(char));
     char* p_work = p_serial;
@@ -1001,17 +1003,17 @@ char* serializeStruct(size_t &rnBytes, const mxArray *rpArray, const char *rpArg
     size_t plenScalar;
     for (int i = 0; i<nfields*nelts; i++) {
         plenScalar= plen[i];
-	WRITE_UINT64(p_work, plenScalar);
+        WRITE_UINT64(p_work, plenScalar);
         memcpy(p_work, (const char*)pser[i], plenScalar);
         p_work += plen[i];
     }
     if (p_work-p_serial!=rnBytes) {
-	// should never happen
-	mexPrintf("serializeStruct -> memory stats: %d [rnBytes = %d]\n", p_work - p_serial, rnBytes);
-	mexErrMsgTxt("Oops, I haven't allocated enough memory, BEWARE");
+        // should never happen
+        mexPrintf("serializeStruct -> memory stats: %d [rnBytes = %d]\n", p_work - p_serial, rnBytes);
+        mexErrMsgTxt("Oops, I haven't allocated enough memory, BEWARE");
     }
 
-	// free unused memory
+    // free unused memory
     mxFree(pname);
     mxFree(fnl);
     for (int i = 1; i<nelts; i++)
@@ -1036,34 +1038,34 @@ char* serializeCell(size_t &rnBytes, const mxArray *rpArray, const char *rpArg, 
     const mxArray* pf;
     for (int i = 0; i < nelts; i++) {
         bool isWeCreatedAnEmptyMatrix=false;
-	mxArray* fakeEmptyMatrix;
-	pf = mxGetCell(rpArray, i);
-	if (pf == NULL) 
-	{	// sometimes pf null on empty elements,
-		// we create a fake empty double element
-		fakeEmptyMatrix=mxCreateDoubleMatrix((mwSize)0,(mwSize)0,mxREAL);
-		pf=fakeEmptyMatrix;
-		isWeCreatedAnEmptyMatrix=true;
-	}
-	if (mxIsSparse(pf)) {
-    pser[i] = serializeSparse(plen[i], pf, rpArg, false);
-	} else if (mxIsNumeric(pf) || mxIsLogical(pf) || mxIsChar(pf)) {
-    pser[i] = serializeArray(plen[i], pf, rpArg, false);
-	} else if (mxIsStruct(pf)) {
-    pser[i] = serializeStruct(plen[i], pf, rpArg, false);
-	} else if (mxIsCell(pf)) {
-    pser[i] = serializeCell(plen[i], pf, rpArg, false);
-	} else {
-    mexErrMsgTxt("unsupported type");
-	}
-	rnBytes += plen[i]+sizeof(_uint64);
-	if (isWeCreatedAnEmptyMatrix)
-	{
-		mxDestroyArray(fakeEmptyMatrix);
-	}
+        mxArray* fakeEmptyMatrix;
+        pf = mxGetCell(rpArray, i);
+        if (pf == NULL) 
+        {   // sometimes pf null on empty elements,
+            // we create a fake empty double element
+            fakeEmptyMatrix=mxCreateDoubleMatrix((mwSize)0,(mwSize)0,mxREAL);
+            pf=fakeEmptyMatrix;
+            isWeCreatedAnEmptyMatrix=true;
+        }
+        if (mxIsSparse(pf)) {
+            pser[i] = serializeSparse(plen[i], pf, rpArg, false);
+        } else if (mxIsNumeric(pf) || mxIsLogical(pf) || mxIsChar(pf)) {
+            pser[i] = serializeArray(plen[i], pf, rpArg, false);
+        } else if (mxIsStruct(pf)) {
+            pser[i] = serializeStruct(plen[i], pf, rpArg, false);
+        } else if (mxIsCell(pf)) {
+            pser[i] = serializeCell(plen[i], pf, rpArg, false);
+        } else {
+            mexErrMsgTxt("unsupported type");
+        }
+        rnBytes += plen[i]+sizeof(_uint64);
+        if (isWeCreatedAnEmptyMatrix)
+        {
+            mxDestroyArray(fakeEmptyMatrix);
+        }
     }
 
-	// put together the partial serializations
+    // put together the partial serializations
     char* p_serial = (char*)mxCalloc(rnBytes, sizeof(char));
     char* p_work = p_serial;
     if (rhead) {
@@ -1084,15 +1086,15 @@ char* serializeCell(size_t &rnBytes, const mxArray *rpArray, const char *rpArg, 
     size_t plenScalar;
     for (int i = 0; i<nelts; i++) {
         plenScalar=plen[i];
-	WRITE_UINT64(p_work, plenScalar);
+        WRITE_UINT64(p_work, plenScalar);
         memcpy(p_work, (const char*)pser[i], plenScalar);
         p_work  +=  plen[i];
     }
 
     if (p_work-p_serial != rnBytes) {
-	// should never arrives here
-	mexPrintf("serializeCell -> memory stats: %d [rnBytes = %d]\n", p_work - p_serial, rnBytes);
-	mexErrMsgTxt("Oops, I haven't allocated enough memory, BEWARE");
+        // should never arrives here
+        mexPrintf("serializeCell -> memory stats: %d [rnBytes = %d]\n", p_work - p_serial, rnBytes);
+        mexErrMsgTxt("Oops, I haven't allocated enough memory, BEWARE");
     }
 
     // free unused memory
@@ -1116,10 +1118,10 @@ char* serializeArray(size_t &rnBytes, const mxArray *rpArray, const char *rpArg,
         n_bytes_data = mxGetElementSize(rpArray) * mxGetNumberOfElements(rpArray) * 2;
 
     size_t nb = 1 + sizeof(_uint64) + ndims*sizeof(_uint64) + sizeof(mxClassID) 
-		         + sizeof(mxComplexity) + n_bytes_data;
+        + sizeof(mxComplexity) + n_bytes_data;
 
     if (rhead)
-	nb +=  LEN_ID_MATLAB + 1;
+        nb +=  LEN_ID_MATLAB + 1;
 
     char *p_serial = (char*) mxCalloc(nb, sizeof(char));
     char *p_work = p_serial;
@@ -1158,11 +1160,12 @@ char* serializeArray(size_t &rnBytes, const mxArray *rpArray, const char *rpArg,
         memcpy(p_work, pdata, n_bytes_data / 2);
         p_work += n_bytes_data / 2;
 
-	// imaginary part data (if exists)
+        // imaginary part data (if exists)
         pdata = (const char*) mxGetImagData(rpArray);
         memcpy(p_work, pdata, n_bytes_data / 2);
         p_work += n_bytes_data / 2;
-    } else {
+    }
+    else {
         // real part data
         const char *pdata = (const char*) mxGetData(rpArray);
         memcpy(p_work, pdata, n_bytes_data);
@@ -1172,8 +1175,8 @@ char* serializeArray(size_t &rnBytes, const mxArray *rpArray, const char *rpArg,
     // sanity check --> should nver happen
     rnBytes = (ulong)(p_work - p_serial);
     if (rnBytes > nb) {
-	mexPrintf("serializeArray -> memory stats: %d [nb = %d]\n", p_work - p_serial, nb);
-	mexErrMsgTxt("Oops, I haven't allocated enough memory, BEWARE");
+        mexPrintf("serializeArray -> memory stats: %d [nb = %d]\n", p_work - p_serial, nb);
+        mexErrMsgTxt("Oops, I haven't allocated enough memory, BEWARE");
     }
 
     return p_serial;
@@ -1207,16 +1210,16 @@ char* serializeSparse(size_t &rnBytes, const mxArray *rpArray,
     //       = ('P') + (rows, cols, nzmax) + (classID) + (complexity) + 
     //             (jc array) + (ir array) + real data    + imaginary data
     size_t nb = 1 + 3 * sizeof(_uint64) + sizeof(mxClassID) + sizeof(mxComplexity) 
-                  + n_bytes_jc + n_bytes_ir + n_bytes_data + n_bytes_imag;
+        + n_bytes_jc + n_bytes_ir + n_bytes_data + n_bytes_imag;
 
     if (rhead)
-	nb += LEN_ID_MATLAB + 1;
+        nb += LEN_ID_MATLAB + 1;
 
     // allocate memory
     char *p_serial = (char*) mxCalloc(nb, sizeof(char));
     char *p_work = p_serial;
     if (!p_serial)
-	mexErrMsgTxt("Not enough memory");
+        mexErrMsgTxt("Not enough memory");
 
     /* SERIALIZE */
     // the first byte is set to 'P' for sparse matrix
@@ -1269,7 +1272,7 @@ char* serializeSparse(size_t &rnBytes, const mxArray *rpArray,
     // sanity check --> should never happen
     rnBytes = (p_work - p_serial);
     if (rnBytes > nb) {
-	mexPrintf("serializeSparse -> memory stats: %d [nb = %d]\n", p_work - p_serial, nb);
+        mexPrintf("serializeSparse -> memory stats: %d [nb = %d]\n", p_work - p_serial, nb);
         mexErrMsgTxt("Oops, I haven't allocated enough memory, BEWARE");
     }
 
@@ -1453,7 +1456,7 @@ mxArray* deserializeSparse(const char *rpSerial, const size_t rlength)
     memcpy((char*) &complexity, p_serial, sizeof(mxComplexity));
     p_serial += sizeof(mxComplexity);
 
-//	mexPrintf("rows=%d, cols=%d, nzmax=%d, compl=%d\n",rows,columns,nzmax,complexity);
+//  mexPrintf("rows=%d, cols=%d, nzmax=%d, compl=%d\n",rows,columns,nzmax,complexity);
 
     // create the sparse matrix
     mxArray *p_array;
@@ -1517,9 +1520,9 @@ mxArray* deserializeStruct(const char* rpSerial, const size_t rlength){
     for (int i = 0; i<nelts; i++)
         for (int j = 0; j<nfields; j++) {
             mwSize nbytes1;
-	    size_t nbytes;
-	    READ_UINT64(&nbytes1, p_serial);
-	    nbytes = nbytes1;
+            size_t nbytes;
+            READ_UINT64(&nbytes1, p_serial);
+            nbytes = nbytes1;
             mxArray* pf;
             if (*p_serial==ID_ARRAY)
                 pf = deserializeArray(p_serial+1, nbytes);
@@ -1558,7 +1561,7 @@ mxArray* deserializeCell(const char* rpSerial, const size_t rlength){
     for (int i = 0; i<nelts; i++){
         size_t nbytes;
         mwSize nbytes1;
-	READ_UINT64(&nbytes1, p_serial);
+        READ_UINT64(&nbytes1, p_serial);
         nbytes=nbytes1;
         mxArray* pf;
         if (*p_serial==ID_ARRAY)
@@ -1599,133 +1602,132 @@ static const _uint64 checkMask= ~castMask;
 
 void safe_read_64uint(mwSize* dst, _uint64* src, size_t n) {
     for (size_t i=0; i < n; ++i) {
-	const _uint64& val = src[i];
+        const _uint64& val = src[i];
 
-    if (val & checkMask) {
-	    mexErrMsgTxt("This dataset exceeds the size limitations of the current platform (e.g. reading huge matrices on 32 bit machines)");
-    }
-	else
-	    dst[i] = (mwSize)(val & castMask);
+        if (val & checkMask)
+            mexErrMsgTxt("This dataset exceeds the size limitations of the current platform (e.g. reading huge matrices on 32 bit machines)");
+        else
+            dst[i] = (mwSize)(val & castMask);
     }
 }
 
 static void getSerialFct(const char* rpt, const mxArray* rparg, pfserial& rpf, bool& rpec) {
     const mwSize n_dims = mxGetNumberOfDimensions(rparg);
     const mwSize* p_dim = mxGetDimensions(rparg);
-  bool no_compression = false;
-  const char* pt = rpt;
-  // first check for preamble
-  if (*pt==PRE_NO_COMPRESSION) {
-    no_compression = true;
-    pt++;
-  }
-  if (*pt==PH_MATLAB) {
-    // this placeholder results in a serialized version of array, cell or structure 
-    rpec = true;
-    if (mxIsNumeric(rparg) || mxIsChar(rparg) || mxIsLogical(rparg))
-      rpf = &serializeArray;
-    else if (mxIsCell(rparg))
-      rpf = &serializeCell;
-    else if (mxIsStruct(rparg))
-      rpf = &serializeStruct;
+    bool no_compression = false;
+    const char* pt = rpt;
+    // first check for preamble
+    if (*pt==PRE_NO_COMPRESSION) {
+        no_compression = true;
+        pt++;
+    }
+    if (*pt==PH_MATLAB) {
+        // this placeholder results in a serialized version of array, cell or structure 
+        rpec = true;
+        if (mxIsNumeric(rparg) || mxIsChar(rparg) || mxIsLogical(rparg))
+            rpf = &serializeArray;
+        else if (mxIsCell(rparg))
+            rpf = &serializeCell;
+        else if (mxIsStruct(rparg))
+            rpf = &serializeStruct;
+        else
+            mexErrMsgTxt("Matlab placeholder only support array, structure, or cell");
+    }
+    else if (*pt==PH_BINARY||*pt==PH_FILE) {
+        // this placeholder results in a binary dump of the corresponding data
+        rpec = true;
+        if (*pt==PH_BINARY)
+            if (n_dims!=2||!(p_dim[0]==1||p_dim[1]==1)||!mxIsUint8(rparg))
+                mexErrMsgTxt("Binary placeholders only accept UINT8 1-by-M or M-by-1 arrays!");
+            else
+                rpf = &serializeBinary;
+        else
+            if (n_dims!=2||!(p_dim[0]==1||p_dim[1]==1)||!mxIsChar(rparg))
+                mexErrMsgTxt("String placeholders only accept CHAR 1-by-M or M-by-1 arrays!");
+            else
+                rpf = &serializeFile;
+    }
+    else if (*pt==PH_STRING) {
+        // this placeholder results in a text version of the data
+        rpec = false;
+        rpf = &serializeString;
+    }
     else
-      mexErrMsgTxt("Matlab placeholder only support array, structure, or cell");
-  }
-  else if (*pt==PH_BINARY||*pt==PH_FILE) {
-    // this placeholder results in a binary dump of the corresponding data
-    rpec = true;
-    if (*pt==PH_BINARY)
-      if (n_dims!=2||!(p_dim[0]==1||p_dim[1]==1)||!mxIsUint8(rparg))
-				mexErrMsgTxt("Binary placeholders only accept UINT8 1-by-M or M-by-1 arrays!");
-      else
-        rpf = &serializeBinary;
-    else
-      if (n_dims!=2||!(p_dim[0]==1||p_dim[1]==1)||!mxIsChar(rparg))
-        mexErrMsgTxt("String placeholders only accept CHAR 1-by-M or M-by-1 arrays!");
-      else
-        rpf = &serializeFile;
-  }
-  else if (*pt==PH_STRING) {
-    // this placeholder results in a text version of the data
-    rpec = false;
-    rpf = &serializeString;
-  }
-  else
-    mexErrMsgTxt("Unknow placeholders!");
-  if (no_compression)
-    rpec = false;
+        mexErrMsgTxt("Unknow placeholders!");
+    if (no_compression)
+        rpec = false;
 }
 
 
 // entry point
 mxArray* deserialize(const char* rpSerial, const size_t rlength) {
-  mxArray* p_res = NULL;
-  bool could_not_deserialize = true;
-  bool used_compression = false;
-  char* p_cmp = NULL;
-  const char* p_serial = rpSerial;
-  size_t length = rlength;
-  if (p_serial==0) {
-    // the row is empty: return an empty array
-    p_res = mxCreateNumericArray(0, 0, mxCHAR_CLASS, mxREAL);
-    return p_res;
-  }
-  if (strcmp(p_serial, ZLIB_ID)==0) {
-    p_serial = p_serial+LEN_ZLIB_ID+1;
-    // read the length in bytes
-    mwSize len;
-    size_t lenLong;
-    READ_UINT64(&len, p_serial);
-    char* p_cmp = (char*)mxCalloc(len, sizeof(char));
-    lenLong=len;
-    try {
-      uLongf lenLong32 = (lenLong & 0xFFFFFFFF);
-      int res = uncompress((Bytef*)p_cmp, &lenLong32, (const Bytef*)p_serial, length);
-      if (res==Z_OK) {
-        used_compression = true;
-        p_serial = p_cmp;
-        length = len;
-      }
-      else
-        p_serial = rpSerial;
+    mxArray* p_res = NULL;
+    bool could_not_deserialize = true;
+    bool used_compression = false;
+    char* p_cmp = NULL;
+    const char* p_serial = rpSerial;
+    size_t length = rlength;
+    if (p_serial==0) {
+        // the row is empty: return an empty array
+        p_res = mxCreateNumericArray(0, 0, mxCHAR_CLASS, mxREAL);
+        return p_res;
     }
-    catch(...) {
-      p_serial = rpSerial;
+    if (strcmp(p_serial, ZLIB_ID)==0) {
+        p_serial = p_serial+LEN_ZLIB_ID+1;
+        // read the length in bytes
+        mwSize len;
+        size_t lenLong;
+        READ_UINT64(&len, p_serial);
+        char* p_cmp = (char*)mxCalloc(len, sizeof(char));
+        lenLong=len;
+        try {
+            uLongf lenLong32 = (lenLong & 0xFFFFFFFF);
+            int res = uncompress((Bytef*)p_cmp, &lenLong32, (const Bytef*)p_serial, length);
+            if (res==Z_OK) {
+                used_compression = true;
+                p_serial = p_cmp;
+                length = len;
+            }
+            else
+                p_serial = rpSerial;
+        }
+        catch(...) {
+            p_serial = rpSerial;
+        }
     }
-  }
-  if (strcmp(p_serial, ID_MATLAB)==0) {
-    p_serial = p_serial+LEN_ID_MATLAB+1;
-    try {
-      could_not_deserialize = false;
-      if (*p_serial==ID_ARRAY)
-        // the blob contains an array
-        p_res = deserializeArray(p_serial+1, length);
-      else if (*p_serial==ID_SPARSE)
-        // the blob contains a sparse matrix
-        p_res = deserializeSparse(p_serial+1, length);
-      else if (*p_serial==ID_STRUCT)
-        // the blob contains a struct
-        p_res = deserializeStruct(p_serial+1, length);
-      else if (*p_serial==ID_CELL)
-        // the blob contains a struct
-        p_res = deserializeCell(p_serial+1, length);
-      else
-        // the blob contains an unknow object
-        could_not_deserialize = true;
+    if (strcmp(p_serial, ID_MATLAB)==0) {
+        p_serial = p_serial+LEN_ID_MATLAB+1;
+        try {
+          could_not_deserialize = false;
+          if (*p_serial==ID_ARRAY)
+            // the blob contains an array
+            p_res = deserializeArray(p_serial+1, length);
+          else if (*p_serial==ID_SPARSE)
+            // the blob contains a sparse matrix
+            p_res = deserializeSparse(p_serial+1, length);
+          else if (*p_serial==ID_STRUCT)
+            // the blob contains a struct
+            p_res = deserializeStruct(p_serial+1, length);
+          else if (*p_serial==ID_CELL)
+            // the blob contains a struct
+            p_res = deserializeCell(p_serial+1, length);
+          else
+            // the blob contains an unknow object
+            could_not_deserialize = true;
+        }
+        catch(...) {
+          could_not_deserialize = true;
+          p_serial = rpSerial;
+        }
     }
-    catch(...) {
-      could_not_deserialize = true;
-      p_serial = rpSerial;
+    if (could_not_deserialize) {
+        // we don't know what to do with the stuff in the database
+        // we return a memory dump in UINT8 format
+        mwSize p_dim[2] = {length, 1};
+        p_res = mxCreateNumericArray(2, p_dim, mxUINT8_CLASS, mxREAL);
+        memcpy((char*)mxGetData(p_res), p_serial, length);
     }
-  }
-	if (could_not_deserialize) {
-		// we don't know what to do with the stuff in the database
-		// we return a memory dump in UINT8 format
-		mwSize p_dim[2] = {length, 1};
-		p_res = mxCreateNumericArray(2, p_dim, mxUINT8_CLASS, mxREAL);
-		memcpy((char*)mxGetData(p_res), p_serial, length);
-	}
-  if (used_compression)
+    if (used_compression)
     mxFree(p_cmp);
-	return p_res;
+    return p_res;
 }
