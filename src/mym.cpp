@@ -163,7 +163,7 @@ static void fancyprint(MYSQL_RES*res) {
     char**fmt = (char**) mxMalloc(nfield*sizeof(char*));
     for (ulong j = 0; j<nfield; j++) {
         fmt[j] = (char*) mxCalloc(10, sizeof(char));
-        sprintf(fmt[j], "  %%-%ds ", len[j]);
+        sprintf(fmt[j], "  %%-%lus ", len[j]);
     }
     /************************************************************************/
     //  Now print the actual data
@@ -254,9 +254,7 @@ static double field2num(const char*s, enum_field_types t) {
         int scanRet = sscanf(s, "%lf", &val);
 #endif
         if (scanRet < 1) {
-            //if (sscanf(s, "%lf", &val)!=1) {
             mexPrintf("Unreadable value \"%s\" of type %s\n", s, typestr(t));
-            mexPrintf("strtod returns %g", std::strtod(s, 0));
             return NaN;
         }
         return val;
@@ -283,7 +281,7 @@ static void field2int(const char*s, enum_field_types t, unsigned int flags, void
 #ifdef _WINDOWS        
             scanRet = _sscanf_s_l(s, "%I64u", locUS, val_typed);
 #else
-            scanRet = sscanf(s, "%lu", val_typed);
+            scanRet = sscanf(s, "%lu", (unsigned long *) val_typed);
 #endif
         }
         else {
@@ -292,12 +290,11 @@ static void field2int(const char*s, enum_field_types t, unsigned int flags, void
 #ifdef _WINDOWS        
             scanRet = _sscanf_s_l(s, "%I64d", locUS, val_typed);
 #else
-            scanRet = sscanf(s, "%ld", val_typed);
+            scanRet = sscanf(s, "%ld", (unsigned long *) val_typed);
 #endif
         }
         if (scanRet < 1) {
             mexPrintf("Unreadable value \"%s\" of type %s\n", s, typestr(t));
-            mexPrintf("strtod returns %g", std::strtod(s, 0));
         }
     }
     else {
@@ -643,7 +640,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             // LOOK FOR THE PLACEHOLDERS
             po = (char**)mxCalloc(nex+1, sizeof(char*));
             pc = (char**)mxCalloc(nex+1, sizeof(char*));
-            if (po[nac++] = strstr(query, PH_OPEN))
+            if ((po[nac++] = strstr(query, PH_OPEN)))
                 while (po[nac-1]&&nac<=nex) {
                     pc[nac-1] = strstr(po[nac-1]+1, PH_CLOSE);
                     if (pc[nac-1]==0)
@@ -945,7 +942,7 @@ char* serializeStruct(size_t &rnBytes, const mxArray *rpArray, const char *rpArg
 	    bool isWeCreatedAnEmptyMatrix=false;
 	    mxArray* fakeEmptyMatrix;
 	    pf = mxGetFieldByNumber(rpArray, i, j);
-	    if ((pf==NULL))
+	    if (pf==NULL)
 	    {
 		    // sometimes, matlab returns null, for good and empty
 		    // elements. the reasons for this are unknown
