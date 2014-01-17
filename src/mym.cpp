@@ -343,15 +343,15 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
     // *********** 
 
     // Parse the first argument to see if it is a specific id number
-    if (nrhs!=0&&mxIsNumeric(prhs[0]))  {
-        if (mxGetM(prhs[0])!=1||mxGetN(prhs[0])!=1) {
+    if ((nrhs!=0) && mxIsNumeric(prhs[0]))  {
+        if ((mxGetM(prhs[0])!=1) || (mxGetN(prhs[0])!=1)) {
             mexPrintf("Usage:  %s([id], command, [ host, user, password ])\n", mexFunctionName());
             mexPrintf("First argument is array %d x %d\n", mxGetM(prhs[0]), mxGetN(prhs[0]));
             mexErrMsgTxt("Invalid connection ID");
         }
         double xid = *mxGetPr(prhs[0]);
         cid = int(xid);
-        if (double(cid)!=xid||cid<-1||cid>=MAXCONN) {
+        if ((double(cid)!=xid) || (cid<-1) || (cid>=MAXCONN)) {
             mexPrintf("Usage:  %s([id], command, [ host, user, password ])\n", mexFunctionName());
             mexPrintf("id = %g -- Must be integer between 0 and %d\n", xid, MAXCONN-1);
             mexErrMsgTxt("Invalid connection ID");
@@ -376,7 +376,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             q = CLOSE;
         else if (!strcasecmp(query, "closeall"))
             q = CLOSE_ALL;
-        else if (!strcasecmp(query, "use")||!strncasecmp(query, "use ", 4))
+        else if (!strcasecmp(query, "use") || !strncasecmp(query, "use ", 4))
             q = USE;
         else if (!strcasecmp(query, "status"))
             q = STATUS;
@@ -412,7 +412,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         if (q!=OPEN)
             mexErrMsgTxt("automatic free connection scan, only when issuing a mYm open command!");
         cid = 0;
-        while (cid<MAXCONN && c[cid].isopen)
+        while ((cid<MAXCONN) && c[cid].isopen)
             ++cid;
         if (cid==MAXCONN)
             mexErrMsgTxt("no free connection ID");
@@ -432,13 +432,13 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         }
         //  Extract information from input arguments
         char*host = NULL;
-        if (nrhs>=jarg+2)
+        if (nrhs>=(jarg+2))
             host = getstring(prhs[jarg+1]);
         char*user = NULL;
-        if (nrhs>=jarg+3)
+        if (nrhs>=(jarg+3))
             user = getstring(prhs[jarg+2]);
         char*pass = NULL;
-        if (nrhs>=jarg+4)
+        if (nrhs>=(jarg+4))
             pass = getstring(prhs[jarg+3]);
         int port = hostport(host);  // returns zero if there is no port
         if (nlhs<1) {
@@ -685,7 +685,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             for (unsigned i = 0; i<nac; i++) {
                 // serialize individual field
                 pd[i] = pf[i](plen[i], prhs[jarg+i+1], pa[i], true);
-                if (pec[i]&&plen[i]>MIN_LEN_ZLIB) {
+                if (pec[i] && (plen[i]>MIN_LEN_ZLIB)) {
                     // compress field
                     const uLongf max_len = compressBound(plen[i]);
                     if (max_len>cmp_buf_len){
@@ -1293,7 +1293,7 @@ char* serializeString(size_t &rnBytes, const mxArray*rpArray, const char*rpArg, 
         rnBytes = 1;
     }
     else if (mxIsChar(rpArray)) {
-        if (n_dims!=2||!(pdims[0]==1||pdims[1]==1))
+        if ((n_dims!=2) || !((pdims[0]==1) || (pdims[1]==1)))
             mexErrMsgTxt("String placeholders only accept CHAR 1-by-M arrays or M-by-1!");
         // matlab string
         p_buf = (char*)mxCalloc(length+1, sizeof(char));
@@ -1633,16 +1633,16 @@ static void getSerialFct(const char* rpt, const mxArray* rparg, pfserial& rpf, b
         else
             mexErrMsgTxt("Matlab placeholder only support array, structure, or cell");
     }
-    else if (*pt==PH_BINARY||*pt==PH_FILE) {
+    else if ((*pt==PH_BINARY) || (*pt==PH_FILE)) {
         // this placeholder results in a binary dump of the corresponding data
         rpec = true;
         if (*pt==PH_BINARY)
-            if (n_dims!=2||!(p_dim[0]==1||p_dim[1]==1)||!mxIsUint8(rparg))
+            if ((n_dims!=2) || !((p_dim[0]==1) || (p_dim[1]==1)) || !mxIsUint8(rparg))
                 mexErrMsgTxt("Binary placeholders only accept UINT8 1-by-M or M-by-1 arrays!");
             else
                 rpf = &serializeBinary;
         else
-            if (n_dims!=2||!(p_dim[0]==1||p_dim[1]==1)||!mxIsChar(rparg))
+            if ((n_dims!=2) || !((p_dim[0]==1) || (p_dim[1]==1)) || !mxIsChar(rparg))
                 mexErrMsgTxt("String placeholders only accept CHAR 1-by-M or M-by-1 arrays!");
             else
                 rpf = &serializeFile;
@@ -1728,6 +1728,6 @@ mxArray* deserialize(const char* rpSerial, const size_t rlength) {
         memcpy((char*)mxGetData(p_res), p_serial, length);
     }
     if (used_compression)
-    mxFree(p_cmp);
+        mxFree(p_cmp);
     return p_res;
 }
