@@ -39,10 +39,10 @@
 
 // some local defintion
 #ifndef ulong
-typedef unsigned long ulong;
+	typedef unsigned long ulong;
 #endif
 #ifndef uchar
-typedef unsigned char uchar;
+	typedef unsigned char uchar;
 #endif
 
 #include <mex.h>  //  Definitions for Matlab API
@@ -53,29 +53,29 @@ typedef unsigned char uchar;
 // We need a platform- and compiler-independent (rofl) fixed size 64 bit integer
 #include <stdint.h>
 #ifdef __GNUC__
-    #include <sys/types.h>
-    #define _uint64 uint64_t
-    #define _int64  int64_t
+	#include <sys/types.h>
+	#define _uint64 uint64_t
+	#define _int64  int64_t
 #elif _MSC_VER
-    #define _uint64 unsigned __int64
-    #define _int64 __int64
-    #define _WINDOWS 1
+	#define _uint64 unsigned __int64
+	#define _int64 __int64
+	#define _WINDOWS 1
 #else
-    #error "I don't know how to declare a 64 bit uint for this compiler. Please fix!"
+	#error "I don't know how to declare a 64 bit uint for this compiler. Please fix!"
 #endif
 
 
 const bool debug = false;  //  turn on information messages
 
 #if (defined(_WIN32)||defined(_WIN64))&&!defined(__WIN__)
-#include <windows.h>
-#include <winsock.h> // to overcome a bug in mysql.h
-/* We use case-insensitive string comparison functions strcasecmp(), strncasecmp().
-   These are a BSD addition and are also defined on Linux, but not on every OS, 
-   in particular Windows. The two "inline" declarations below fix this problem. If
-   you get errors on other platforms, move the declarations outside the WIN32 block */
-inline int strcasecmp(const char *s1, const char *s2) { return strcmp(s1, s2); }
-inline int strncasecmp(const char *s1, const char *s2, size_t n) { return strncmp(s1, s2, n); }
+	#include <windows.h>
+	#include <winsock.h> // to overcome a bug in mysql.h
+	/* We use case-insensitive string comparison functions strcasecmp(), strncasecmp().
+	   These are a BSD addition and are also defined on Linux, but not on every OS, 
+	   in particular Windows. The two "inline" declarations below fix this problem. If
+	   you get errors on other platforms, move the declarations outside the WIN32 block */
+	inline int strcasecmp(const char *s1, const char *s2) { return strcmp(s1, s2); }
+	inline int strncasecmp(const char *s1, const char *s2, size_t n) { return strncmp(s1, s2, n); }
 #endif
 #include <mysql.h>  //  Definitions for MySQL client API
 
@@ -119,8 +119,8 @@ void safe_read_64uint(mwSize* dst, _uint64* src, size_t n);
 const char portsep = ':';   //  separates host name from port number
 static int hostport(char *s) {
 	//   Look for first portsep in s; return 0 if null or can't find
-	if (!s||!(s = strchr(s, portsep))) 
-    return 0;
+	if (!s || !(s = strchr(s, portsep))) 
+		return 0;
 	//  If s points to portsep, then truncate and convert tail
 	*s = 0;
 	s+=1;
@@ -141,9 +141,9 @@ public:
 	MYSQL *conn;   //  MySQL connection information structure
 	bool isopen;   //  whether we believe that connection is open
 	conninfo() { 
-    conn = NULL; 
-    isopen = false; 
-  }
+		conn = NULL; 
+		isopen = false; 
+  	}
 };
 const int MAXCONN = 20;
 static conninfo c[MAXCONN];   //  preserve state for MAXCONN different connections
@@ -175,7 +175,7 @@ typedef char* (*pfserial)(size_t &, const mxArray*, const char*, const bool);
 // Query flags passed from Matlab to mym
 const char ML_FLAG_BIGINT_TO_DOUBLE[] = "bigint_to_double";
 enum CMD_FLAGS {
-    FLAG_BIGINT_TO_DOUBLE = 1
+	FLAG_BIGINT_TO_DOUBLE = 1
 };
 
 
