@@ -1,0 +1,36 @@
+% test serialize and deserialize commands
+
+% array
+fprintf('Testing Array...\n') ;
+for ii=1:10000
+    a = rand(3,3) ;
+    b = mym('serialize {M}',a) ;
+    bb = b{1} ;
+    c = mym('deserialize',bb) ;
+    if (sum(norm(a-c,2)))
+        fprintf('array serialization-deserialization did not work\n') ;
+        break ;
+    end
+    if (rem(ii,100) == 0)
+        fprintf('Iteration # %d\n', ii) ;
+    end
+end
+
+
+% struct
+fprintf('Testing Struct...\n') ;
+a = struct
+for ii=1:10000
+    a.x = rand(3,3) ;
+    a.y = rand(3,3) ;
+    b = mym('serialize {M}',a) ;
+    bb = b{1} ;
+    c = mym('deserialize',bb) ;
+    if (sum(norm(a.x-c.x,2)+norm(a.y-c.y,2)))
+        fprintf('struct serialization-deserialization did not work\n') ;
+        break ;
+    end
+    if (rem(ii,100) == 0)
+        fprintf('Iteration # %d\n', ii) ;
+    end
+end 

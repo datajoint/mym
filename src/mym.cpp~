@@ -60,8 +60,7 @@ typedef size_t mwIndex;
                     for (size_t i=0; i < (n); ++i) { pTemp[i] = (_uint64)val[i]; } \
                     p += (n) * sizeof(_uint64);  } while(0)
                         
-#define debug false
-                        
+#define debug true
 /**********************************************************************
  *typestr(s):  Readable translation of MySQL field type specifier
  *       as listed in   mysql_com.h
@@ -1020,6 +1019,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                             memcpy(mxGetPr(vec), pd[i], plen[i]) ;
                             mxFree(pd[i]) ;
                             mxSetCell(cell_array_ptr,i,vec);
+                            mxDestroyArray(vec) ;
                         }
                         else {
                             mexErrMsgTxt("Unable to allocate memory for serialized output of a variable\n");
@@ -1037,7 +1037,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
     }
     else if (q==DESERIALIZE) {
         if ((nlhs == 1) && (nrhs == 2)) {
-            plhs[0] = deserialize((const char *) mxGetPr(prhs[1]),0) ; // the 2nd input argument is a pointer to the matlab variable containing serialized data
+            plhs[0] = deserialize((const char *) mxGetData(prhs[1]),0) ; // the 2nd input argument is a pointer to the matlab variable containing serialized data
         }
         else {
             mexErrMsgTxt("There must be only one input and one output variable\n");
@@ -1822,12 +1822,14 @@ mxArray* deserialize(const char* rpSerial, const size_t rlength) {
     char* p_cmp = NULL;
     const char* p_serial = rpSerial;
     size_t length = rlength;
+    mexPrintf("in here\n") ;
     if (p_serial==0) {
         // the row is empty: return an empty array
         p_res = mxCreateNumericArray(0, 0, mxCHAR_CLASS, mxREAL);
         return p_res;
     }
-
+        mexPrintf("in here 1\n") ;
+mex
     if (strcmp(p_serial, ZLIB_ID)==0) {
         p_serial = p_serial+LEN_ZLIB_ID+1;
         // read the length in bytes
@@ -1852,12 +1854,20 @@ mxArray* deserialize(const char* rpSerial, const size_t rlength) {
         }
     }
     if (strcmp(p_serial, ID_MATLAB)==0) {
+            mexPrintf("in here 2\n") ;
+
         p_serial = p_serial+LEN_ID_MATLAB+1;
         try {
           could_not_deserialize = false;
-          if (*p_serial==ID_ARRAY)
+          if (*p_serial==ID_ARRAY) {
+                  mexPrintf("in here 3\n") ;
+
             // the blob contains an array
             p_res = deserializeArray(p_serial+1, length);
+            
+                  mexPrintf("in here 4\n") ;
+            
+          }
           else if (*p_serial==ID_SPARSE)
             // the blob contains a sparse matrix
             p_res = deserializeSparse(p_serial+1, length);
