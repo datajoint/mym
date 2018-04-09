@@ -344,32 +344,33 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
 
     // Parse the first argument to see if it is a specific id number
     if ((nrhs!=0) && mxIsNumeric(prhs[0]))  {
+    // first input argument cant be an array, and has to be an integer if first argument is a number
         if ((mxGetM(prhs[0])!=1) || (mxGetN(prhs[0])!=1)) {
             mexPrintf("Usage:  %s([id], command, [ host, user, password ])\n", mexFunctionName());
             mexPrintf("First argument is array %d x %d\n", mxGetM(prhs[0]), mxGetN(prhs[0]));
             mexErrMsgTxt("Invalid connection ID");
         }
-        double xid = *mxGetPr(prhs[0]);
+        double xid = *mxGetPr(prhs[0]); // get ID of current connection
         cid = int(xid);
         if ((double(cid)!=xid) || (cid<-1) || (cid>=MAXCONN)) {
             mexPrintf("Usage:  %s([id], command, [ host, user, password ])\n", mexFunctionName());
             mexPrintf("id = %g -- Must be integer between 0 and %d\n", xid, MAXCONN-1);
             mexErrMsgTxt("Invalid connection ID");
         }
-        jarg++;
-    }
+        jarg++; // move on to next input argument, index value here should be 1 
+    } // not clear what happens if first parameter is not connection id, cid will remain 0
     if (debug)
         mexPrintf("cid = %d  jarg = %d\n", cid, jarg);
     /*********************************************************************/
     //  Parse the result based on the first argument
-    enum querytype { OPEN, CLOSE, CLOSE_ALL, USE, STATUS, CMD, VERSION } q;
+    enum querytype { OPEN, CLOSE, CLOSE_ALL, USE, STATUS, CMD, SERIALIZE, DESERIALIZE, VERSION } q;
     char*query = NULL;
     if (nrhs<=jarg)
         q = STATUS;
     else {
-        if (!mxIsChar(prhs[jarg]))
+        if (!mxIsChar(prhs[jarg])) // get the next input argument which has to be a character string containing the query/command
             mexErrMsgTxt("The command string is missing!");
-        query = getstring(prhs[jarg]);
+        query = getstring(prhs[jarg]); // bring the whole string
         if (!strcasecmp(query, "open"))
             q = OPEN;
         else if (!strcasecmp(query, "close"))
@@ -382,8 +383,12 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             q = STATUS;
         else if (!strcasecmp(query, "version"))
             q = VERSION;
+        else if (!strcasecmp(query, "serialize")) // command has 1 input and 1 output variable, converts a matlab variable to blob
+            q = SERIALIZE;
+        else if (!strcasecmp(query, "deserialize")) // command has 1 input and 1 output variable, converts a matlab blob to variable
+            q = DESERIALIZE;
         else
-            q = CMD;
+            q = CMD; // the string is a mysql command
     }
     //  Check that the arguments are all character strings
     if (q!=CMD)
@@ -412,15 +417,16 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         if (q!=OPEN)
             mexErrMsgTxt("automatic free connection scan, only when issuing a mYm open command!");
         cid = 0;
-        while ((cid<MAXCONN) && c[cid].isopen)
+        while ((cid<MAXCONN) && c[cid].isopen) // c is an array of structures that contains opened connection's info
             ++cid;
         if (cid==MAXCONN)
             mexErrMsgTxt("no free connection ID");
-    }
+    } // still not clear what happens if cid was 0 from earlier code, seems like without explicit conn id, the default is 0
+    
     // Shorthand notation now that we know which id we have
     typedef MYSQL* mp;
-    mp &conn = c[cid].conn;
-    bool &isopen = c[cid].isopen;
+    mp &conn = c[cid].conn; // setup pointer to the connection 
+    bool &isopen = c[cid].isopen; // setup pointer to the connection status
     if (q==OPEN) {
         // OPEN A NEW CONNECTION
         ////////////////////////
@@ -433,13 +439,13 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         //  Extract information from input arguments
         char*host = NULL;
         if (nrhs>=(jarg+2))
-            host = getstring(prhs[jarg+1]);
+            host = getstring(prhs[jarg+1]); // hostname or address
         char*user = NULL;
         if (nrhs>=(jarg+3))
-            user = getstring(prhs[jarg+2]);
+            user = getstring(prhs[jarg+2]); // database username
         char*pass = NULL;
         if (nrhs>=(jarg+4))
-            pass = getstring(prhs[jarg+3]);
+            pass = getstring(prhs[jarg+3]); // database password
         int port = hostport(host);  // returns zero if there is no port
         if (nlhs<1) {
             mexPrintf("Connecting to  host = %s", (host) ? host : "localhost");
@@ -459,14 +465,14 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         //mysql_options(conn, MYSQL_OPT_RECONNECT, &my_true);
         if (!mysql_real_connect(conn, host, user, pass, NULL, port, NULL, CLIENT_MULTI_STATEMENTS))
             mexErrMsgTxt(mysql_error(conn));
-        const char*c = mysql_stat(conn);
-        if (c) {
+        const char*cs = mysql_stat(conn); // return connection status as a string - changed variable from c to cs
+        if (cs) {
             if (nlhs<1)
-                mexPrintf("%s\n", c);
+                mexPrintf("%s\n", cs);
         }
         else
             mexErrMsgTxt(mysql_error(conn));
-        isopen = true;
+        isopen = true; // connection is open and ready
         
         //  Now we are OK -- if he wants output, give him the cid
         if (nlhs>=1) {
@@ -500,25 +506,25 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         ////////////////////////
         if (!isopen)
             mexErrMsgTxt("Not connected");
-        if (mysql_ping(conn)) {
+        if (mysql_ping(conn)) { // check if connection is still alive
             isopen = false;
             mexErrMsgTxt(mysql_error(conn));
         }
         char*db = NULL;
         if (!strcasecmp(query, "use")) {
             if (nrhs>=2)
-                db = getstring(prhs[jarg+1]);
+                db = getstring(prhs[jarg+1]); // database name
             else
                 mexErrMsgTxt("Must specify a database to use");
         }
-        else if (!strncasecmp(query, "use ", 4)) {
+        else if (!strncasecmp(query, "use ", 4)) { // not clear why this is needed
             db = query+4;
             while (*db==' ' ||*db=='\t')
                 db++;
         }
         else
             mexErrMsgTxt("How did we get here?  Internal logic error!");
-        if (mysql_select_db(conn, db))
+        if (mysql_select_db(conn, db)) // select the database
             mexErrMsgTxt(mysql_error(conn));
         if (nlhs<1)
             mexPrintf("Current database is \"%s\"\n", db);
@@ -616,10 +622,10 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         }
         //******************PLACEHOLDER PROCESSING******************
         // global placeholders variables and constant
-        const unsigned nex = nrhs-jarg-1;   // expected number of placeholders
+        const unsigned nex = nrhs-jarg-1;   // expected number of placeholders based on number of input arguments specified
         unsigned query_flags = 0;
         unsigned nb_flags = 0;
-        unsigned nac = 0;                                   // actual number
+        unsigned nac = 0;                                   // actual number of placeholders based on {}'s in the first string
         size_t lq = strlen(query);  // original query length, needed at some point
         // Check for presence of query flags. This needs to be expanded once we have additional flags
         for (int i=nrhs-1; i > jarg; --i) {
@@ -631,11 +637,11 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             }
         }
 
-        if (nex) {
+        if (nex) { // if there are arguments beyond the first string variable
             // local placeholders variables and constant
             char** po = 0;                              // pointer to placeholders openning symbols
             char** pc = 0;                              // pointer to placeholders closing symbols
-            bool*  pec = 0;               // pointer to 'enable compression field'
+            bool*  pec = 0;                             // pointer to 'enable compression field'
             char** pa = 0;                              // pointer to placeholder in-string argument
             unsigned* ps = 0;                           // pointer to placeholders size (in bytes)
             pfserial* pf = 0;                           // pointer to serialization function
@@ -887,6 +893,120 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         mxFree(pr);
         mxFree(i_pr);
         mysql_free_result(res);
+    }
+    else if (q==SERIALIZE) {
+        // serialize the matlab variable, it can be an array, cell, struct etc
+        //******************PLACEHOLDER PROCESSING******************
+        // global placeholders variables and constant
+        const unsigned nex = nrhs-jarg-1;   // expected number of placeholders
+        unsigned query_flags = 0;
+        unsigned nb_flags = 0;
+        unsigned nac = 0;                                   // actual number
+        size_t lq = strlen(query);  // original query length, needed at some point
+
+        if (nex) {
+            // local placeholders variables and constant
+            char** po = 0;                              // pointer to placeholders openning symbols
+            char** pc = 0;                              // pointer to placeholders closing symbols
+            bool*  pec = 0;                             // pointer to 'enable compression field'
+            char** pa = 0;                              // pointer to placeholder in-string argument
+            unsigned* ps = 0;                           // pointer to placeholders size (in bytes)
+            pfserial* pf = 0;                           // pointer to serialization function
+            // LOOK FOR THE PLACEHOLDERS
+            po = (char**)mxCalloc(nex+1, sizeof(char*));
+            pc = (char**)mxCalloc(nex+1, sizeof(char*));
+            if ((po[nac++] = strstr(query, PH_OPEN)))
+                while (po[nac-1]&&nac<=nex) {
+                    pc[nac-1] = strstr(po[nac-1]+1, PH_CLOSE);
+                    if (pc[nac-1]==0)
+                        mexErrMsgTxt("Placeholders are not correctly closed!");
+                    po[nac] = strstr(pc[nac-1]+1, PH_OPEN);
+                    nac++;
+                }
+            nac--; // what a wierd way to find {}s
+            if (nac != nex) {
+                mexErrMsgTxt("The number of placeholders differs from that of additional arguments!");
+            }
+            
+            char** pd = (char**)mxCalloc(nac, sizeof(char*)); // output of serialized variable, for each placeholder
+            size_t* plen = (size_t*)mxCalloc(nac, sizeof(size_t)); // length of bytes in the serialized variable, for each place holder
+            
+            // now we have the correct number of placeholders
+            // read the types and in-string arguments
+            ps = (unsigned*)mxCalloc(nac, sizeof(unsigned));
+            pa = (char**)mxCalloc(nac, sizeof(char*));
+            pec = (bool*)mxCalloc(nac, sizeof(bool));
+            pf = (pfserial*)mxCalloc(nac, sizeof(pfserial));
+            for (unsigned i = 0; i<nac; i++) {
+                // placeholder function+control ph type+control arg type
+                getSerialFct(po[i]+strlen(PH_OPEN), prhs[jarg+i+1], pf[i], pec[i]); // first parameter points to the first character of placeholder
+                // placeholder size in bytes
+                ps[i] = (unsigned)(pc[i]-po[i]+strlen(PH_OPEN));
+                // placeholder in-string argument
+                pa[i] = po[i]+strlen(PH_OPEN)+1; // e.g. i in {Si}
+                *(pc[i]) = 0;
+                // we can add a termination character in the query,
+                // it will be processed anyway and we already have the original query length
+            }
+            // serialize
+            uLongf cmp_buf_len = 10000;
+            Bytef* pcmp = (Bytef*)mxCalloc(cmp_buf_len, sizeof(Bytef));
+            size_t nb = 0;
+            for (unsigned i = 0; i<nac; i++) {
+                // serialize individual field
+                pd[i] = pf[i](plen[i], prhs[jarg+i+1], pa[i], true); // serialize the variable field
+                if (pec[i] && (plen[i]>MIN_LEN_ZLIB)) { // compress if needed
+                    // compress field
+                    const uLongf max_len = compressBound(plen[i]);
+                    if (max_len>cmp_buf_len){
+                        pcmp = (Bytef*)mxRealloc(pcmp, max_len);
+                        cmp_buf_len = max_len;
+                    }
+                    uLongf len = cmp_buf_len;
+                    if (compress(pcmp, &len, (Bytef*)pd[i], plen[i])!=Z_OK)
+                        mexErrMsgTxt("Compression failed");
+                    const float cmp_rate = plen[i]/(LEN_ZLIB_ID+1.f+sizeof(_uint64)+len);
+                    if (cmp_rate>MIN_CMP_RATE_ZLIB) {
+                        const size_t len_old = plen[i];
+                        plen[i] = LEN_ZLIB_ID+1+sizeof(_uint64)+len;
+                        pd[i] = (char*)mxRealloc(pd[i], plen[i]);
+                        memcpy(pd[i], (const char*)ZLIB_ID, LEN_ZLIB_ID);
+                        *(pd[i]+LEN_ZLIB_ID) = 0;
+
+                        *((_uint64*)(pd[i]+LEN_ZLIB_ID+1)) = (_uint64) len_old;
+                        memcpy(pd[i]+LEN_ZLIB_ID+1+sizeof(_uint64), pcmp, len);
+                        //BUG: *((_uint64*)(pd[i]+LEN_ZLIB_ID+1+sizeof(_uint64))) = (_uint64) len;
+                    }
+                }
+                nb += plen[i];
+            }
+            mxFree(query);
+            mxFree(po);
+            mxFree(pc);
+            mxFree(pec);
+            mxFree(ps);
+            mxFree(pa);
+            if (pcmp!=NULL)
+                mxFree(pcmp);
+        
+    //      return the serialized items as cell array of unsigned byte vectors
+            mxArray *cell_array_ptr ;
+            mxArray *vec ;
+            cell_array_ptr = mxCreateCellMatrix(nac,1);
+            for (unsigned i=0; i<nac; i++){
+                vec = mxCreateNumericMatrix(plen[i],1,mxUINT8_CLASS,mxREAL) ;
+                memcpy(vec, pd[i], plen[i]) ;
+                mxFree(pd[i]) ;
+                mxSetCell(cell_array_ptr,i,vec);
+                mxDestroyArray(vec) ;
+            }    
+            mxFree(pd);
+            mxFree(plen);
+            plhs[0] = cell_array_ptr; 
+        }
+    }
+    else if (q==DESERIALIZE) {
+        plhs[0] = deserialize((const char *) mxGetData(prhs[1]),0) ; // the 2nd input argument is a pointer to the matlab variable containing serialized data
     }
     else if (q == VERSION) {
         if (nrhs > (jarg+1))

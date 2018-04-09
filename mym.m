@@ -98,6 +98,14 @@
 % 'minor' and 'bugfix' is returned. These fields contain numeric
 % scalars corresponding to the version major.minor.bugfix
 %
+% mym('serialize {placeholder1},..',matlab_variable1,..)
+% -------------
+%   Return : cell array of vectors of type ubyte, a vector per matlab variable 
+%
+% mym('deserialize', serialized_input)
+% -------------
+%   Return : matlab variable of the appropriate type 
+%
 % HISTORY
 % -------
 % v1.36   - fixed bug for Linux64 related to cross-platform compatibility. Blobs written on windows can be read under 
