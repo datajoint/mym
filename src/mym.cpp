@@ -313,7 +313,7 @@ static void field2int(const char*s, enum_field_types t, unsigned int flags, void
  *  This is based on an original by Kimmo Uutela
  **********************************************************************/
 static char* getstring(const mxArray*a) {
-    int llen = mxGetM(a)*mxGetN(a)*sizeof(mxChar)+1;
+    int llen = (int) mxGetM(a)* (int) mxGetN(a)*sizeof(mxChar)+1;
     char*c = (char*) mxCalloc(llen, sizeof(char));
     if (mxGetString(a, c, llen))
         mexErrMsgTxt("Can\'t copy string in getstring()");
