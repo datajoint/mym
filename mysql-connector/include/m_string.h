@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
+   Copyright (c) 2000, 2015, Oracle and/or its affiliates. All rights reserved.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -14,30 +14,20 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
 
-/* There may be prolems include all of theese. Try to test in
-   configure with ones are needed? */
-
-/*  This is needed for the definitions of strchr... on solaris */
-
 #ifndef _m_string_h
 #define _m_string_h
 
 #include "my_global.h"                          /* HAVE_* */
 
-#ifndef __USE_GNU
-#define __USE_GNU				/* We want to use stpcpy */
-#endif
-#if defined(HAVE_STRINGS_H)
-#include <strings.h>
-#endif
 #include <string.h>
 
-/* need by my_vsnprintf */
-#include <stdarg.h> 
+#define bfill please_use_memset_rather_than_bfill
+#define bzero please_use_memset_rather_than_bzero
+#define bmove please_use_memmove_rather_than_bmove
+#define strmov please_use_my_stpcpy_or_my_stpmov_rather_than_strmov
+#define strnmov please_use_my_stpncpy_or_my_stpnmov_rather_than_strnmov
 
-#define bfill please_use_memset_rather_than_bfill()
-#define bzero please_use_memset_rather_than_bzero()
-#define bmove please_use_memmove_rather_than_bmove()
+#include "mysql/service_my_snprintf.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -52,20 +42,9 @@ extern void *(*my_str_malloc)(size_t);
 extern void *(*my_str_realloc)(void *, size_t);
 extern void (*my_str_free)(void *);
 
-#if defined(HAVE_STPCPY) && MY_GNUC_PREREQ(3, 4) && !defined(__INTEL_COMPILER)
-#define strmov(A,B) __builtin_stpcpy((A),(B))
-#elif defined(HAVE_STPCPY)
-#define strmov(A,B) stpcpy((A),(B))
-#endif
-
 /* Declared in int2str() */
 extern char _dig_vec_upper[];
 extern char _dig_vec_lower[];
-
-#ifndef strmov
-#define strmov_overlapp(A,B) strmov(A,B)
-#define strmake_overlapp(A,B,C) strmake(A,B,C)
-#endif
 
 	/* Prototypes for string functions */
 
@@ -77,15 +56,105 @@ extern  char *strcend(const char *, pchar);
 extern	char *strfill(char * s,size_t len,pchar fill);
 extern	char *strmake(char *dst,const char *src,size_t length);
 
-#ifndef strmov
-extern	char *strmov(char *dst,const char *src);
-#else
-extern	char *strmov_overlapp(char *dst,const char *src);
-#endif
-extern	char *strnmov(char *dst, const char *src, size_t n);
+extern	char *my_stpmov(char *dst,const char *src);
+extern	char *my_stpnmov(char *dst, const char *src, size_t n);
 extern	char *strcont(const char *src, const char *set);
 extern	char *strxmov(char *dst, const char *src, ...);
 extern	char *strxnmov(char *dst, size_t len, const char *src, ...);
+
+/**
+   Copy a string from src to dst until (and including) terminating null byte.
+
+   @param dst   Destination
+   @param src   Source
+
+   @note src and dst cannot overlap.
+         Use my_stpmov() if src and dst overlaps.
+
+   @note Unsafe, consider using my_stpnpy() instead.
+
+   @return pointer to terminating null byte.
+*/
+static inline char *my_stpcpy(char *dst, const char *src)
+{
+#if defined(HAVE_BUILTIN_STPCPY)
+  return __builtin_stpcpy(dst, src);
+#elif defined(HAVE_STPCPY)
+  return stpcpy(dst, src);
+#else
+  /* Fallback to implementation supporting overlap. */
+  return my_stpmov(dst, src);
+#endif
+}
+
+/**
+   Copy fixed-size string from src to dst.
+
+   @param dst   Destination
+   @param src   Source
+   @param n     Maximum number of characters to copy.
+
+   @note src and dst cannot overlap
+         Use my_stpnmov() if src and dst overlaps.
+
+   @return pointer to terminating null byte.
+*/
+static inline char *my_stpncpy(char *dst, const char *src, size_t n)
+{
+#if defined(HAVE_STPNCPY)
+  return stpncpy(dst, src, n);
+#else
+  /* Fallback to implementation supporting overlap. */
+  return my_stpnmov(dst, src, n);
+#endif
+}
+
+static inline longlong my_strtoll(const char *nptr, char **endptr, int base)
+{
+#if defined _WIN32
+  return _strtoi64(nptr, endptr, base);
+#else
+  return strtoll(nptr, endptr, base);
+#endif
+}
+
+static inline ulonglong my_strtoull(const char *nptr, char **endptr, int base)
+{
+#if defined _WIN32
+  return _strtoui64(nptr, endptr, base);
+#else
+  return strtoull(nptr, endptr, base);
+#endif
+}
+
+static inline char *my_strtok_r(char *str, const char *delim, char **saveptr)
+{
+#if defined _WIN32
+  return strtok_s(str, delim, saveptr);
+#else
+  return strtok_r(str, delim, saveptr);
+#endif
+}
+
+/* native_ rather than my_ since my_strcasecmp already exists */
+static inline int native_strcasecmp(const char *s1, const char *s2)
+{
+#if defined _WIN32
+  return _stricmp(s1, s2);
+#else
+  return strcasecmp(s1, s2);
+#endif
+}
+
+/* native_ rather than my_ for consistency with native_strcasecmp */
+static inline int native_strncasecmp(const char *s1, const char *s2, size_t n)
+{
+#if defined _WIN32
+  return _strnicmp(s1, s2, n);
+#else
+  return strncasecmp(s1, s2, n);
+#endif
+}
 
 size_t my_snprintf(char* to, size_t n, const char* fmt, ...);
 size_t my_vsnprintf(char *to, size_t n, const char* fmt, va_list ap);
@@ -150,10 +219,8 @@ longlong my_strtoll10(const char *nptr, char **endptr, int *error);
 #define strtoll(A,B,C) strtol((A),(B),(C))
 #define strtoull(A,B,C) strtoul((A),(B),(C))
 #else
-#ifdef HAVE_LONG_LONG
 extern char *ll2str(longlong val,char *dst,int radix, int upcase);
 extern char *longlong10_to_str(longlong val,char *dst,int radix);
-#endif
 #endif
 #define longlong2str(A,B,C) ll2str((A),(B),(C),1)
 
@@ -161,23 +228,20 @@ extern char *longlong10_to_str(longlong val,char *dst,int radix);
 }
 #endif
 
-struct st_mysql_lex_string
-{
-  char *str;
-  size_t length;
-};
+/*
+  LEX_STRING -- a pair of a C-string and its length.
+  (it's part of the plugin API as a MYSQL_LEX_STRING)
+  Ditto LEX_CSTRING/MYSQL_LEX_CSTRING.
+*/
+
+#include <mysql/mysql_lex_string.h>
 typedef struct st_mysql_lex_string LEX_STRING;
-
-#define STRING_WITH_LEN(X) (X), ((size_t) (sizeof(X) - 1))
-#define USTRING_WITH_LEN(X) ((uchar*) X), ((size_t) (sizeof(X) - 1))
-#define C_STRING_WITH_LEN(X) ((char *) (X)), ((size_t) (sizeof(X) - 1))
-
-struct st_mysql_const_lex_string
-{
-  const char *str;
-  size_t length;
-};
 typedef struct st_mysql_const_lex_string LEX_CSTRING;
+
+#define STRING_WITH_LEN(X) (X), ((sizeof(X) - 1))
+#define USTRING_WITH_LEN(X) ((uchar*) X), ((sizeof(X) - 1))
+#define C_STRING_WITH_LEN(X) ((char *) (X)), ((sizeof(X) - 1))
+
 
 /**
   Skip trailing space.
@@ -268,6 +332,12 @@ static inline const uchar *skip_trailing_space(const uchar *ptr, size_t len)
 static inline void lex_string_set(LEX_STRING *lex_str, const char *c_str)
 {
   lex_str->str= (char *) c_str;
+  lex_str->length= strlen(c_str);
+}
+
+static inline void lex_cstring_set(LEX_CSTRING *lex_str, const char *c_str)
+{
+  lex_str->str= c_str;
   lex_str->length= strlen(c_str);
 }
 

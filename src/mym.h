@@ -68,14 +68,16 @@
 const bool debug = false;  //  turn on information messages
 
 #if (defined(_WIN32)||defined(_WIN64))&&!defined(__WIN__)
-	#include <windows.h>
-	#include <winsock.h> // to overcome a bug in mysql.h
+ 	#include <windows.h>
+ 	#include <winsock.h> // to overcome a bug in mysql.h
 	/* We use case-insensitive string comparison functions strcasecmp(), strncasecmp().
 	   These are a BSD addition and are also defined on Linux, but not on every OS, 
 	   in particular Windows. The two "inline" declarations below fix this problem. If
 	   you get errors on other platforms, move the declarations outside the WIN32 block */
+    // in windows, strcasecmp and strcasestr dont do a case insensitive execution, so user must makse sure that everything is case sensitive
 	inline int strcasecmp(const char *s1, const char *s2) { return strcmp(s1, s2); }
 	inline int strncasecmp(const char *s1, const char *s2, size_t n) { return strncmp(s1, s2, n); }
+	inline const char * strcasestr(const char *s1, const char *s2) { return strstr(s1, s2); }
 #endif
 #include <mysql.h>  //  Definitions for MySQL client API
 
