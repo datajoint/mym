@@ -441,6 +441,33 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         if (nrhs>=(jarg+4))
             pass = getstring(prhs[jarg+3]);
         int port = hostport(host);  // returns zero if there is no port
+        //  Establish and test the connection
+        //  If this fails, then conn is still set, but isopen stays false
+        if (!(conn = mysql_init(conn)))
+            mexErrMsgTxt("Couldn\'t initialize MySQL connection object");
+
+        const char*ssl_input = "none";
+        int mode_option = SSL_MODE_PREFERRED;
+
+        if (nrhs>=(jarg+5))
+            ssl_input = getstring(prhs[jarg+4]);
+
+        if (!strcasecmp(ssl_input, "true")) {
+            ssl_input = "true";
+            mode_option = SSL_MODE_REQUIRED;
+        }
+        else if (!strcasecmp(ssl_input, "false")) {
+            ssl_input = "false";
+            mode_option = SSL_MODE_DISABLED;
+        }
+        else if (strstr (ssl_input,"{")) {
+            mode_option = SSL_MODE_REQUIRED;
+            mexErrMsgIdAndTxt("DataJoint:TLS:InvalidStruct",
+                "Custom TLS struct definition not supported yet.");
+        }
+
+        mysql_options(conn, MYSQL_OPT_SSL_MODE, &mode_option);
+
         if (nlhs<1) {
             mexPrintf("Connecting to  host = %s", (host) ? host : "localhost");
             if (port)
@@ -449,16 +476,15 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                 mexPrintf("  user = %s", user);
             if (pass)
                 mexPrintf("  password = %s", pass);
+            mexPrintf("  ssl = %s", ssl_input);
             mexPrintf("\n");
         }
-        //  Establish and test the connection
-        //  If this fails, then conn is still set, but isopen stays false
-        if (!(conn = mysql_init(conn)))
-            mexErrMsgTxt("Couldn\'t initialize MySQL connection object");
+
         //my_bool  my_true = true;
         //mysql_options(conn, MYSQL_OPT_RECONNECT, &my_true);
         if (!mysql_real_connect(conn, host, user, pass, NULL, port, NULL, CLIENT_MULTI_STATEMENTS))
-            mexErrMsgTxt(mysql_error(conn));
+            mexErrMsgIdAndTxt("MySQL:Error",
+                mysql_error(conn));
         const char*c = mysql_stat(conn);
         if (c) {
             if (nlhs<1)
@@ -532,6 +558,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
     else if (q==STATUS) {
         // GET CONNECTION STATUS
         ////////////////////////
+        const char*ssl_status;
         if (nlhs<1) {
             //  He just wants a report
             if (jarg>0) {
@@ -544,7 +571,9 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                     isopen = false;
                     mexErrMsgTxt(mysql_error(conn));
                 }
-                mexPrintf("%2d:  %-30s   Server version %s\n", cid, mysql_get_host_info(conn), mysql_get_server_info(conn));
+                if (mysql_get_ssl_cipher(conn)) {ssl_status = "(encrypted)";} else ssl_status = "";
+                mexPrintf("%2d:  %-30s   Server version %s %s\n", cid, mysql_get_host_info(conn), 
+                    mysql_get_server_info(conn), ssl_status);
             }
             else {
                 //  mysql('status') with no specified connection
@@ -565,7 +594,9 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                         isopen = false;
                         mexErrMsgTxt(mysql_error(conn));
                     }
-                    mexPrintf("Connected to %s Server version %s Client %s\n", mysql_get_host_info(conn), mysql_get_server_info(conn), mysql_get_client_info());
+                    if (mysql_get_ssl_cipher(conn)) {ssl_status = "(encrypted)";} else ssl_status = "";
+                    mexPrintf("Connected to %s Server version %s Client %s %s\n", mysql_get_host_info(conn), 
+                        mysql_get_server_info(conn), mysql_get_client_info(), ssl_status);
                 }
                 else {
                     // More than one connection is open
@@ -577,7 +608,9 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                                 mexPrintf("%2d:  %s\n", mysql_error(c[j].conn));
                                 continue;
                             }
-                            mexPrintf("%2d: %-30s Server version %s\n", j, mysql_get_host_info(c[j].conn), mysql_get_server_info(c[j].conn));
+                            if (mysql_get_ssl_cipher(c[j].conn)) {ssl_status = "(encrypted)";} else ssl_status = "";
+                            mexPrintf("%2d: %-30s Server version %s %s\n", j, mysql_get_host_info(c[j].conn), 
+                                mysql_get_server_info(c[j].conn), ssl_status);
                         }
                     }
                 }
