@@ -6,6 +6,9 @@ function mymSetup()
 basePath = fileparts(mfilename('fullpath'));
 mexPath = fullfile(basePath, 'distribution', mexext());
 
+% Set plugin directory to allow custom plugins to be loaded
+setenv('LIBMYSQL_PLUGIN_DIR',mexPath);
+
 assert(logical(exist(mexPath, 'dir')), ...
     ['This distribution of mym does not include binaries for your ' ...
     'platform. Please obtain the ' ...
