@@ -355,7 +355,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         printf("LIBMYSQL_PLUGIN_DIR[GetEnvironmentVariable]:  %s\n", buff); //Raphael test
 
         std::ostringstream oss;
-        oss << "LIBMYSQL_PLUGIN_DIR=" << buff;
+        oss << "LIBMYSQL_PLUGIN_DIR=" << "C:\Users\tankadmin\Desktop\test\datajoint-matlab\mym\distribution\mexw64";
         std::string example = oss.str();
         putenv(example.c_str());
 
