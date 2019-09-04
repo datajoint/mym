@@ -1,2 +1,4 @@
 mym.o
 build/*
+LNX-docker-compose.yml
+*.env
