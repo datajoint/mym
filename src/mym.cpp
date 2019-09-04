@@ -39,7 +39,6 @@
 #include <algorithm> // for max
 #include <locale.h>   
 #include "mym.h"
-#include "Windows.h"
 
 // These typedefs are for older Matlab versions.
 // If your compiler throws an error, please check why
@@ -49,6 +48,9 @@ typedef size_t mwIndex;
 
 #ifdef _WINDOWS
   _locale_t locUS = _create_locale(LC_NUMERIC, "english-us");
+  #include <string>
+  #include <sstream>
+  #include "Windows.h"
 #endif
 
 //The crazy do{}while(0) constructions circumvents unexpected results when using the macro followed by a semicolon in
@@ -342,13 +344,23 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
     // Set numeric locale to English (US), such that '.' is used as decimal point
     //char* lcOldNumeric = setlocale(LC_NUMERIC, "english-us");
     // *********** 
-    printf("LIBMYSQL_PLUGIN_DIR[getenv]:  %s\n", getenv("LIBMYSQL_PLUGIN_DIR")); //Raphael test
-    const DWORD buff_size = 50;
-    LPTSTR buff = new TCHAR[buff_size];
-    DWORD var_size;
-    buff[0] = '\0';
-    var_size = GetEnvironmentVariable("LIBMYSQL_PLUGIN_DIR",buff,buff_size);
-    printf("LIBMYSQL_PLUGIN_DIR[GetEnvironmentVariable]:  %s\n", buff); //Raphael test
+    #ifdef _WINDOWS
+        printf("LIBMYSQL_PLUGIN_DIR[getenv]:  %s\n", getenv("LIBMYSQL_PLUGIN_DIR")); //Raphael test
+  
+        const DWORD buff_size = 50;
+        LPTSTR buff = new TCHAR[buff_size];
+        DWORD var_size;
+        buff[0] = '\0';
+        var_size = GetEnvironmentVariable("LIBMYSQL_PLUGIN_DIR",buff,buff_size);
+        printf("LIBMYSQL_PLUGIN_DIR[GetEnvironmentVariable]:  %s\n", buff); //Raphael test
+
+        std::ostringstream oss;
+        oss << "LIBMYSQL_PLUGIN_DIR=" << buff;
+        std::string example = oss.str();
+        putenv(example.c_str());
+
+        printf("LIBMYSQL_PLUGIN_DIR[getenv]:  %s\n", getenv("LIBMYSQL_PLUGIN_DIR")); //Raphael test
+    #endif
     // Parse the first argument to see if it is a specific id number
     if ((nrhs!=0) && mxIsNumeric(prhs[0]))  {
         if ((mxGetM(prhs[0])!=1) || (mxGetN(prhs[0])!=1)) {
