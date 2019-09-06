@@ -43,6 +43,6 @@ system(['install_name_tool -change "' strip(old_link) '" ' ...
     fullfile(build_out, ['mym.' mexext()]) '"']);
 
 % Pack mex with all dependencies into distribution directory
-copyfile(['mym.' mexext()], distrib_out);
-copyfile(fullfile(mysql_lib, 'libmysqlclient*'), distrib_out);
-copyfile(fullfile(mariadb_lib, 'dialog.so'), distrib_out);
+copyfile(['mym.' mexext()], distrib_out, 'f');
+copyfile(fullfile(mysql_lib, 'libmysqlclient*'), distrib_out, 'f');
+copyfile(fullfile(mariadb_lib, 'dialog.so'), distrib_out, 'f');

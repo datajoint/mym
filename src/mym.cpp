@@ -318,6 +318,38 @@ static char* getstring(const mxArray*a) {
     return c;
 }
 /**********************************************************************
+ *updateplugindir():   Update Client Plugin Directory
+ *  Set LIBMYSQL_PLUGIN_DIR environment variable
+ *  Utilize mym root directory
+ *  Future client plugin libraries to be packaged here
+ **********************************************************************/
+static void updateplugindir() {
+    mxArray *mym_string[1];
+    mxArray *mym_path[1];
+    mxArray *mym_fileparts[3];
+    char*mym_directory = NULL;
+
+    mym_string[0] = mxCreateString("mym");
+    mexCallMATLAB(1, mym_path, 1, mym_string, "which");
+    mexCallMATLAB(3, mym_fileparts, 1, mym_path, "fileparts");
+    mym_directory = getstring(mym_fileparts[0]);
+
+    char environment_string[1000];
+    strcpy(environment_string,"LIBMYSQL_PLUGIN_DIR=");
+    strcat(environment_string,mym_directory);
+    putenv(environment_string);
+
+    // //Confirm Path
+    // printf("Path:  %s\n", mym_directory); 
+    // printf("LIBMYSQL_PLUGIN_DIR[getenv]:  %s\n", getenv("LIBMYSQL_PLUGIN_DIR"));
+
+    mxDestroyArray(mym_string[0]);
+    mxDestroyArray(mym_path[0]);
+    mxDestroyArray(mym_fileparts[0]);
+    mxDestroyArray(mym_fileparts[1]);
+    mxDestroyArray(mym_fileparts[2]);
+}
+/**********************************************************************
  *mysql():  Execute the actual action
  * Which action we perform is based on the first input argument,
  * which must be present and must be a character string:
@@ -340,7 +372,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
 
     // Set numeric locale to English (US), such that '.' is used as decimal point
     //char* lcOldNumeric = setlocale(LC_NUMERIC, "english-us");
-    // *********** 
+    // ***********
 
     // Parse the first argument to see if it is a specific id number
     if ((nrhs!=0) && mxIsNumeric(prhs[0]))  {
@@ -480,6 +512,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             mexPrintf("\n");
         }
 
+        updateplugindir();
         //my_bool  my_true = true;
         //mysql_options(conn, MYSQL_OPT_RECONNECT, &my_true);
         if (!mysql_real_connect(conn, host, user, pass, NULL, port, NULL, CLIENT_MULTI_STATEMENTS))
