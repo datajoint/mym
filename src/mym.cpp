@@ -354,13 +354,133 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         var_size = GetEnvironmentVariable("LIBMYSQL_PLUGIN_DIR",buff,buff_size);
         printf("LIBMYSQL_PLUGIN_DIR[GetEnvironmentVariable]:  %s\n", buff); //Raphael test
 
+        mxArray *in[1];
+        mxArray *out[1];
+        mxArray *output[3];
+
+        in[0] = mxCreateString("mym");
+
+
+        mexCallMATLAB(1, out, 1, in, "which");
+        mexCallMATLAB(3, output, 1, out, "fileparts");
+        printf("Path:  %s\n", getstring(output[0])); //Raphael test
+
+        mxDestroyArray(in[0]);
+        mxDestroyArray(out[0]);
+        mxDestroyArray(output[0]);
+        mxDestroyArray(output[1]);
+        mxDestroyArray(output[2]);
+
         std::ostringstream oss;
-        oss << "LIBMYSQL_PLUGIN_DIR=" << "C:\\Users\\tankadmin\\Desktop\\test\\datajoint-matlab\\mym\\distribution\\mexw64";
+        oss << "LIBMYSQL_PLUGIN_DIR=" << getstring(output[0]);
         std::string example = oss.str();
         putenv(example.c_str());
 
         printf("LIBMYSQL_PLUGIN_DIR[getenv]:  %s\n", getenv("LIBMYSQL_PLUGIN_DIR")); //Raphael test
     #endif
+
+    
+
+    // mxArray *input[1];
+    // mxArray *output[1];
+
+    // double  *pointer;          /* pointer to real data in new array */
+    // // mwSize index;
+    // const double data[] = {-10};  /* existing data */
+
+    // // /* Check for proper number of arguments. */
+    // // if ( nrhs != 0 ) {
+    // //     mexErrMsgIdAndTxt("MATLAB:arrayFillGetPr:rhs","This function takes no input arguments.");
+    // // } 
+
+    // /* Create an m-by-n mxArray; you will copy existing data into it */
+    // input[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
+    // pointer = mxGetPr(input[0]);
+
+    // /* Copy data into the mxArray */
+    // // for ( index = 0; index < ELEMENTS; index++ ) {
+    // pointer[0] = data[0];
+    // // }
+
+    // mexCallMATLAB(0,NULL,1,&input,"disp");
+
+    // printf("PathFirst:  %s\n", *mxGetPr(input, 0)); //Raphael test
+    // mexCallMATLAB(1,output,1, input, "abs");
+
+
+
+    // mxArray *output[1], *input[1];
+
+    // // input =  mxCreateDoubleMatrix(1, 1, mxREAL);
+
+
+    // double  *pointer;          /* pointer to real data in new array */
+    // // mwSize index;
+    // // const double data[] = {-10};  /* existing data */
+
+
+    // /* Create an m-by-n mxArray; you will copy existing data into it */
+    // input[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
+    // pointer = mxGetPr(input[0]);
+
+    // /* Copy data into the mxArray */
+    // // for ( index = 0; index < ELEMENTS; index++ ) {
+    // pointer[0] = -10;
+    // // }
+
+
+
+
+    // // input[0] = mxGetPr(-10);
+    // // add_string(input);
+
+    // mexCallMATLAB(1,&output,1, &input, "abs");
+
+    // printf("Path:  %s\n", output[0]); //Raphael test
+
+
+
+    // mxArray *lhs[1], *rhs[2]; //parameters to be passed to feval
+    // double f, *xptr, x[] = {0.0, 0.0}; // x: input to f and f=f(x)
+    // int n = 2, nbytes = n * sizeof(double);  // n: dimension of input x to f
+
+    // // prhs[0] is the function handle as first argument to feval
+    // rhs[0] = const_cast<mxArray *>( "abs" );
+
+    // // rhs[1] contains input x to the function
+    // rhs[1] = mxCreateDoubleMatrix( n, 1, mxREAL);
+    // xptr = mxGetPr( rhs[1] );
+
+    // for (int i = 0; i < 10; ++i)
+    // {
+    //     x[1] = double(i);   // change input 
+    //     memcpy( xptr, x, nbytes );  // now rhs[1] has new x
+    //     mexCallMATLAB(1, lhs, 2, rhs, "feval");
+    //     f = *mxGetPr( lhs[0] );
+    // }
+
+
+    // // char pBuf[256]; 
+    // // size_t len = sizeof(pBuf);
+    // // char szTmp[32];
+    // // sprintf(szTmp, "/proc/%d/exe", getpid());
+    // // int bytes = MIN(readlink(szTmp, pBuf, len), len - 1);
+    // // // int bytes = readlink(szTmp, pBuf, len);
+    // // if(bytes >= 0)
+    // //     pBuf[bytes] = '\0';
+
+    // mxArray *output[1], *input[1];
+    // // mxArray*c = mxCreateString("/src/distribution/mexa64/dialog.so");
+    // // pa = mxCreateDoubleScalar(-10);
+    // input[0] = mxCreateDoubleScalar(-10);
+    // //then i call mexcall matlab 
+    // mexCallMATLAB(1, output, 1, input, "abs");
+
+
+    // // mxArray *raph_rhs[1], *raph_lhs[1];
+    // // raph_rhs[0] = mxCreateString("/src/distribution/mexa64/dialog.so");
+    // // mexCallMATLAB(1, raph_lhs, 1, raph_rhs, "ls");
+    // printf("Path:  %s\n", output[1]); //Raphael test
     // Parse the first argument to see if it is a specific id number
     if ((nrhs!=0) && mxIsNumeric(prhs[0]))  {
         if ((mxGetM(prhs[0])!=1) || (mxGetN(prhs[0])!=1)) {
