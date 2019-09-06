@@ -335,8 +335,8 @@ static void updateplugindir() {
     mym_directory = getstring(mym_fileparts[0]);
 
     char environment_string[1000];
-    strcpy (environment_string,"LIBMYSQL_PLUGIN_DIR=");
-    strcat (environment_string,mym_directory);
+    strcpy(environment_string,"LIBMYSQL_PLUGIN_DIR=");
+    strcat(environment_string,mym_directory);
     putenv(environment_string);
 
     // //Confirm Path
