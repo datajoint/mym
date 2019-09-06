@@ -357,13 +357,15 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         mxArray *in[1];
         mxArray *out[1];
         mxArray *output[3];
+        char*mym_path = NULL;
 
         in[0] = mxCreateString("mym");
 
 
         mexCallMATLAB(1, out, 1, in, "which");
         mexCallMATLAB(3, output, 1, out, "fileparts");
-        printf("Path:  %s\n", getstring(output[0])); //Raphael test
+        mym_path = getstring(output[0]);
+        printf("Paths:  %s\n", mym_path); //Raphael test
 
         mxDestroyArray(in[0]);
         mxDestroyArray(out[0]);
@@ -372,7 +374,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         mxDestroyArray(output[2]);
 
         std::ostringstream oss;
-        oss << "LIBMYSQL_PLUGIN_DIR=" << getstring(output[0]);
+        oss << "LIBMYSQL_PLUGIN_DIR=" << mym_path;
         std::string example = oss.str();
         putenv(example.c_str());
 
