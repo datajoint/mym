@@ -1727,8 +1727,14 @@ static void getSerialFct(const char* rpt, const mxArray* rparg, pfserial& rpf, b
 
 // entry point
 mxArray* deserialize(const char* rpSerial, const size_t rlength) {
-    printf("Serialization:  %s\n", rpSerial);
-    printf("Length:  %u\n", (unsigned)strlen(rpSerial)); 
+    if (!strcasecmp(rpSerial, "mYm"))
+        printf("Serialization:  MYM\n");
+    else if (!strcasecmp(rpSerial, "dj0"))
+        printf("Serialization:  DJ0\n");
+    else 
+        printf("Serialization:  UNKNOWN\n");
+    // printf("Serialization:  %s\n", rpSerial);
+    // printf("Length:  %u\n", (unsigned)strlen(rpSerial)); 
     mxArray* p_res = NULL;
     bool could_not_deserialize = true;
     bool used_compression = false;
