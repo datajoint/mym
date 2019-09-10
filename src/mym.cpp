@@ -1727,9 +1727,9 @@ static void getSerialFct(const char* rpt, const mxArray* rparg, pfserial& rpf, b
 
 // entry point
 mxArray* deserialize(const char* rpSerial, const size_t rlength) {
-    if (!strcasecmp(rpSerial, "dj0"))
-        mexErrMsgIdAndTxt("DataJoint:CrossPlatform:Compatibility",
-                "Data ingested utilizing DataJoint-Python version >=0.12 not yet supported.");;
+    // if (!strcasecmp(rpSerial, "dj0"))
+    //     mexErrMsgIdAndTxt("DataJoint:CrossPlatform:Compatibility",
+    //             "Data ingested utilizing DataJoint-Python version >=0.12 not yet supported.");
     // if (!strcasecmp(rpSerial, "mYm"))
     //     printf("Serialization:  MYM\n");
     // else if (!strcasecmp(rpSerial, "dj0"))
