@@ -1727,7 +1727,7 @@ static void getSerialFct(const char* rpt, const mxArray* rparg, pfserial& rpf, b
 
 // entry point
 mxArray* deserialize(const char* rpSerial, const size_t rlength) {
-    printf("Raphael message:  %s\n", rpSerial); 
+    printf("Serialization:  %s, %s\n", rpSerial, rlength); 
     mxArray* p_res = NULL;
     bool could_not_deserialize = true;
     bool used_compression = false;
