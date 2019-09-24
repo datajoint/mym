@@ -1727,6 +1727,9 @@ static void getSerialFct(const char* rpt, const mxArray* rparg, pfserial& rpf, b
 
 // entry point
 mxArray* deserialize(const char* rpSerial, const size_t rlength) {
+    if (!strcasecmp(rpSerial, "dj0"))
+        mexErrMsgIdAndTxt("DataJoint:CrossPlatform:Compatibility",
+                "Blob data ingested utilizing DataJoint-Python version >=0.12 not yet supported.");
     mxArray* p_res = NULL;
     bool could_not_deserialize = true;
     bool used_compression = false;
