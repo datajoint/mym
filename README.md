@@ -35,7 +35,7 @@ MYSQL_TAG=5.7
 | Run all tests                | `run(tests.Main)`                                                              |
 | Run one class of tests       | `run(tests.TestTls)`                                                           |
 | Run one specific test        | `runtests('tests.TestTls/testInsecureConn')`                                   |
-| Run tests based on test name | `import matlab.unittest.TestSuite;`<br>`import matlab.unittest.selectors.HasName;`<br>`import matlab.unittest.constraints.ContainsSubstring;`<br>`suite = TestSuite.fromClass(?tests.Main, ... `<br><pre>`HasName(ContainsSubstring('Conn')));`</pre><br>`run(suite)`|
+| Run tests based on test name | `import matlab.unittest.TestSuite;`<br>`import matlab.unittest.selectors.HasName;`<br>`import matlab.unittest.constraints.ContainsSubstring;`<br>`suite = TestSuite.fromClass(?tests.Main, ... `<br>`HasName(ContainsSubstring('Conn')));`<br>`run(suite)`|
 
 
 Launch Jupyter Notebook
