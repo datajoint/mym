@@ -128,7 +128,7 @@
 %         - use std::max<int>(a, b) instead of max(a, b)
 % v1.0.5  - added the preamble 'u', permitting to save binary fields without using compression
 %         - corrected a bug in mym('closeall')
-%         - corrected various mistakes in the help file (thanks to J�rg Buchholz)
+%         - corrected various mistakes in the help file (thanks to Jörg Buchholz)
 % v1.0.4  corrected the behaviour of mYm with time fields, now return a string dump of the field
 % v1.0.3 	minor corrections
 % v1.0.2  put mYm under GPL license, official release

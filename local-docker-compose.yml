@@ -4,7 +4,7 @@ x-net: &net
   networks:
     - main
 services:
-  mym:
+  app:
     <<: *net
     environment:
     - DJ_HOST=db
@@ -34,21 +34,6 @@ services:
           \";
         ## Interactive Jupyter Notebook environment
         jupyter notebook;
-        ## Run tests manually
-        ### all (in MATLAB or Jupyter Notebook)
-        # run(tests.Main)
-        ### single (in MATLAB or Jupyter Notebook)
-        # runtests('tests.TestTls/testInsecureConn')
-        ### group (in MATLAB or Jupyter Notebook)
-        # import matlab.unittest.TestSuite;
-        # import matlab.unittest.selectors.HasName;
-        # import matlab.unittest.constraints.ContainsSubstring;
-        # suite = TestSuite.fromClass(?tests.Main, HasName(ContainsSubstring('Conn')));
-        # run(suite)
-        ### class (in MATLAB or Jupyter Notebook)
-        # run(tests.TestTls)
-        ## Remote debugger (Matlab GUI)
-        # matlab;
       "
     mac_address: $MATLAB_HOSTID
     volumes:
@@ -56,7 +41,7 @@ services:
       - .:/src
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       ## Additional mounts may go here
-      - ./notebook:/home/muser/notebooks
+      # - ./notebook:/home/muser/notebooks
   db:
     <<: *net
     image: datajoint/mysql:${MYSQL_TAG}
