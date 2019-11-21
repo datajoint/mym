@@ -1,34 +1,44 @@
-classdef TestConnection < matlab.unittest.TestCase
+classdef TestConnection < tests.Prep
     % TestConnection tests typical connection scenarios.
     methods (Test)
-        function testConnection(testCase)
+        function testNewConnection(testCase)
+            % force new connections test
             st = dbstack;
             disp(['---------------' st(1).name '---------------']);
-            testCase.verifyTrue(dj.conn(...
-                testCase.CONN_INFO.host,...
-                testCase.CONN_INFO.user,...
-                testCase.CONN_INFO.password,'',true).isConnected);
+            curr_conn = mym(-1, 'open', testCase.CONN_INFO.host, ...
+                testCase.CONN_INFO.user, testCase.CONN_INFO.password, ...
+                'false');
+
+            curr_conn = mym(-1, 'open', testCase.CONN_INFO.host, ...
+                testCase.CONN_INFO.user, testCase.CONN_INFO.password, ...
+                'false');
+
+            connections = evalc("mym('status')");
+            connections = splitlines(connections);
+            connections(end)=[];
+
+            testCase.verifyEqual(length(connections), 2);
+            mym('closeall');
         end
-        function testConnectionExists(testCase)
-            % testConnectionExists tests that will not fail if connection open
-            % to the same host.
-            % Fix https://github.com/datajoint/datajoint-matlab/issues/160
+        function testReuseConnection(testCase)
+            % reuse existing connections test
             st = dbstack;
             disp(['---------------' st(1).name '---------------']);
-            dj.conn(testCase.CONN_INFO.host, '', '', '', '', true)
-            dj.conn(testCase.CONN_INFO.host, '', '', '', '', true)
-        end
-        function testConnectionDiffHost(testCase)
-            % testConnectionDiffHost tests that will fail if connection open
-            % to a different host.
-            % Fix https://github.com/datajoint/datajoint-matlab/issues/160
-            st = dbstack;
-            disp(['---------------' st(1).name '---------------']);
-            dj.conn(testCase.CONN_INFO.host, '', '', '', '', true)
-            
-            testCase.verifyError(@() dj.conn(...
-                'anything', '', '', '', '', true), ...
-                'DataJoint:Connection:AlreadyInstantiated');
+            conn1 = mym('open', testCase.CONN_INFO.host, ...
+                testCase.CONN_INFO.user, testCase.CONN_INFO.password, ...
+                'false');
+
+            conn2 = mym('open', testCase.CONN_INFO.host, ...
+                testCase.CONN_INFO.user, testCase.CONN_INFO.password, ...
+                'false');
+
+            connections = evalc("mym('status')");
+            connections = splitlines(connections);
+            connections(end)=[];
+
+            testCase.verifyEqual(conn1, conn2);
+            testCase.verifyEqual(length(connections), 1);
+            mym('closeall');
         end
     end
 end

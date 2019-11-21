@@ -1,4 +1,4 @@
-# docker-compose -f LNX-docker-compose.yml --env-file LNX.env up --build --exit-code-from dj
+# docker-compose -f LNX-docker-compose.yml --env-file LNX.env up --build --exit-code-from mym
 version: '2.4'
 x-net: &net
   networks:
@@ -10,15 +10,15 @@ services:
     - DISPLAY
     - MATLAB_LICENSE
     - MATLAB_USER
-    - DJ_HOST=mysql
+    - DJ_HOST=db
     - DJ_USER=root
     - DJ_PASS=simple
-    - DJ_TEST_HOST=mysql
+    - DJ_TEST_HOST=db
     - DJ_TEST_USER=datajoint
     - DJ_TEST_PASSWORD=datajoint
     image: raphaelguzman/matlab:${MATLAB_VERSION}-MIN
     depends_on:
-      mysql:
+      db:
         condition: service_healthy
     user: ${MATLAB_UID}:${MATLAB_GID}
     working_dir: /src
@@ -34,7 +34,7 @@ services:
     volumes:
       - .:/src
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-  mysql:
+  db:
     <<: *net
     image: datajoint/mysql:${MYSQL_TAG}
     environment:

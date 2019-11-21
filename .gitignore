@@ -1,3 +1,4 @@
 mym.o
 build/*
 *.env
+notebook/*
