@@ -19,7 +19,7 @@ Running Tests Locally
 * Create an `.env` with desired development environment values e.g.
 ``` sh
 MATLAB_USER=raphael
-MATLAB_LICENSE="#\ BEGIN----...---------END" # See [guzman-raphael/matlab](https://github.com/guzman-raphael/matlab) for detailed instructions on image use hosted [DockerHub](https://hub.docker.com/r/raphaelguzman/matlab)
+MATLAB_LICENSE="#\ BEGIN----...---------END" # For image usage instructions see https://github.com/guzman-raphael/matlab, https://hub.docker.com/r/raphaelguzman/matlab
 MATLAB_VERSION=R2018b
 MATLAB_HOSTID=XX:XX:XX:XX:XX:XX
 MATLAB_UID=1000
@@ -34,8 +34,11 @@ MYSQL_TAG=5.7
 | Use Case                     | MATLAB Code                                                                    |
 | ---------------------------- | ------------------------------------------------------------------------------ |
 | Run all tests                | `run(tests.Main)`                                                              |
+| ---------------------------- | ------------------------------------------------------------------------------ |
 | Run one class of tests       | `run(tests.TestTls)`                                                           |
+| ---------------------------- | ------------------------------------------------------------------------------ |
 | Run one specific test        | `runtests('tests.TestTls/testInsecureConn')`                                   |
+| ---------------------------- | ------------------------------------------------------------------------------ |
 | Run tests based on test name | `import matlab.unittest.TestSuite;`                                            |
 |                              | `import matlab.unittest.selectors.HasName;`                                    |
 |                              | `import matlab.unittest.constraints.ContainsSubstring;`                        |
