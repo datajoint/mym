@@ -1,4 +1,5 @@
 mym.o
 build/*
+docker-compose.yml
 *.env
 notebook/*
