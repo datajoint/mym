@@ -4,7 +4,7 @@ x-net: &net
   networks:
     - main
 services:
-  mym:
+  app:
     <<: *net
     environment:
     - DISPLAY
