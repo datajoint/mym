@@ -29,6 +29,7 @@ services:
       /bin/bash -c "
         ## Set mym path
         matlab -nodisplay -r \"\
+            run('mex_compilation/compile_linux');\
             addpath('./distribution/mexa64');\
             savepath;\
           \";
