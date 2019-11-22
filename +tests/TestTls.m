@@ -14,7 +14,7 @@ classdef TestTls < tests.Prep
             testCase.verifyTrue(contains(connections{curr_conn+1},'encrypted'));
 
             res = mym(curr_conn, 'SHOW STATUS LIKE ''Ssl_cipher'';');
-            testCase.verifyTrue(length(res.Value{1}) > 0);   
+            testCase.verifyTrue(length(res.Value{1}) > 0);
             mym('closeall');
         end
         function testInsecureConn(testCase)
