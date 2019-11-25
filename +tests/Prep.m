@@ -15,7 +15,6 @@ classdef Prep < matlab.unittest.TestCase
         function init(testCase)
             disp('---------------INIT---------------');
             clear functions;
-            testCase.addTeardown(@testCase.dispose);
             addpath('./distribution/mexa64');
 
             curr_conn = mym(-1, 'open', testCase.CONN_INFO_ROOT.host, ...
@@ -80,14 +79,13 @@ classdef Prep < matlab.unittest.TestCase
             mym('closeall');
         end
     end
-       
-    methods (Static)
-        function dispose()
+    methods (TestClassTeardown)
+        function dispose(testCase)
             disp('---------------DISP---------------');
             warning('off','MATLAB:RMDIR:RemovedFromPath');
             
-            curr_conn = mym(-1, 'open', tests.Prep.CONN_INFO_ROOT.host, ...
-                tests.Prep.CONN_INFO_ROOT.user, tests.Prep.CONN_INFO_ROOT.password, ...
+            curr_conn = mym(-1, 'open', testCase.CONN_INFO_ROOT.host, ...
+                testCase.CONN_INFO_ROOT.user, testCase.CONN_INFO_ROOT.password, ...
                 'false');
 
             cmd = {...
