@@ -22,8 +22,7 @@ classdef Prep < matlab.unittest.TestCase
                 'false');
             
             res = mym(curr_conn, 'select @@version as version');
-            disp(res.version);
-            if tests.lib.compareVersions({char(res.version{1})},'5.8')
+            if tests.lib.compareVersions(res.version,'5.8')
                 cmd = {...
                 'CREATE USER IF NOT EXISTS ''datajoint''@''%%'' '
                 'IDENTIFIED BY ''datajoint'';'
