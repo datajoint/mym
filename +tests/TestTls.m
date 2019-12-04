@@ -32,7 +32,7 @@ classdef TestTls < tests.Prep
             res = mym(curr_conn, 'SHOW STATUS LIKE ''Ssl_cipher'';');
             testCase.verifyEqual( ...
                 res.Value{1}, ...
-                '');            
+                '');
             mym('closeall');
         end
         function testPreferredConn(testCase)
@@ -41,10 +41,10 @@ classdef TestTls < tests.Prep
             disp(['---------------' st(1).name '---------------']);
             check(mym(-1, 'open', testCase.CONN_INFO.host, testCase.CONN_INFO.user, ...
                 testCase.CONN_INFO.password))
-            
+
             check(mym(-1, 'open', testCase.CONN_INFO.host, testCase.CONN_INFO.user, ...
                 testCase.CONN_INFO.password, 'none'))
-            
+
             check(mym(-1, 'open', testCase.CONN_INFO.host, testCase.CONN_INFO.user, ...
                 testCase.CONN_INFO.password, 'anything'))
 
@@ -72,7 +72,7 @@ classdef TestTls < tests.Prep
                 testCase.verifyEqual(e.identifier, 'MySQL:Error');
                 testCase.verifyTrue(contains(e.message,...
                     ["requires secure connection","Access denied"])); %MySQL8,MySQL5
-            end          
+            end
             mym('closeall');
         end
     end
