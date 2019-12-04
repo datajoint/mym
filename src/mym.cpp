@@ -947,9 +947,9 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                     tmpPr=mxGetField(plhs[0],0,f[j].name);
                     mxArray*c;
                     if (f[j].flags & BINARY_FLAG) {
-                        uint8_t* p = (uint8_t *)row[j];
+                        static const uint8_t* p = (uint8_t *)row[j];
                         c = mxCreateNumericMatrix (1, p_lengths[j], mxUINT8_CLASS, mxREAL);
-                        uint8_t* vro = (uint8_t*)mxGetData(c);
+                        static uint8_t* vro = (uint8_t*)mxGetData(c);
                         for (int k=0; k < p_lengths[j]; k++) {
                             vro[k] = p[k];
                         }
