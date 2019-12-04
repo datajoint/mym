@@ -39,8 +39,10 @@ classdef TestInsertFetch < tests.Prep
     end
     methods (Static)
         function check(conn_id, datatype, flag, data)
-            mym(conn_id, ['create table `djtest_insert`.`test_' datatype '` (id int, name ' datatype ' comment ":' datatype ':");']);
-            mym(conn_id, ['INSERT INTO `djtest_insert`.`test_' datatype '` (`id`,`name`) VALUES (0,"{' flag '}") '],data);
+            mym(conn_id, ['create table `djtest_insert`.`test_' datatype ...
+                '` (id int, name ' datatype ' comment ":' datatype ':");']);
+            mym(conn_id, ['INSERT INTO `djtest_insert`.`test_' datatype ...
+                '` (`id`,`name`) VALUES (0,"{' flag '}") '],data);
             res = mym(conn_id, ['select * from `djtest_insert`.`test_' datatype '`']);
             ret = res.name{1};
             assert(all(ret == data));
