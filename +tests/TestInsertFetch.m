@@ -1,14 +1,14 @@
 classdef TestInsertFetch < tests.Prep
-    % TestExternal tests external storage serialization/deserialization.
+    % TestExternal tests inserting and fetching the same result.
     methods (Test)
         function testInsertFetch(testCase)
-            % array serialization test
+            % insert/fetch test.
             st = dbstack;
             disp(['---------------' st(1).name '---------------']);
             curr_conn = mym(-1, 'open', testCase.CONN_INFO.host, testCase.CONN_INFO.user, ...
-                testCase.CONN_INFO.password, 'false');     
+                testCase.CONN_INFO.password, 'false');
             mym(curr_conn, 'create database `djtest_insert`;');
-            
+
             testCase.check(curr_conn, 'varchar(7)','S','raphael');
             testCase.check(curr_conn, 'longblob','M',int64([1;2]));
             testCase.check(curr_conn, 'varchar(8)','S','ýýýý');
@@ -35,7 +35,7 @@ classdef TestInsertFetch < tests.Prep
             testCase.check(curr_conn, 'varchar(24)','S',v_char);
 
             mym('closeall');
-        end 
+        end
     end
     methods (Static)
         function check(conn_id, datatype, flag, data)
