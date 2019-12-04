@@ -758,7 +758,12 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             size_t nb = 0;
             for (unsigned i = 0; i<nac; i++) {
                 // serialize individual field
+                mexPrintf("Pre string: %s\n", pa[i]);
+
                 pd[i] = pf[i](plen[i], prhs[jarg+i+1], pa[i], true);
+                // pd[i] = hex2char(pd[i], plen[i]);
+                // pd[i] = "bernard";
+                mexPrintf("Prior string: %s\n", pd[i]);
                 if (pec[i] && (plen[i]>MIN_LEN_ZLIB)) {
                     // compress field
                     const uLongf max_len = compressBound(plen[i]);
@@ -788,13 +793,18 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             char* nq = (char*)mxCalloc(2*nb+lq+1, sizeof(char));  // new query
             char* pnq = nq; // running pointer to new query
             const char* poq = query; // running pointer to old query
+            mexPrintf("New Query: %s\n", nq);
             for (unsigned i = 0; i<nac; i++) {
                 memcpy(pnq, poq, po[i]-poq);
                 pnq += po[i]-poq;
                 poq = po[i]+ps[i];
                 pnq += mysql_real_escape_string(conn, pnq, pd[i], plen[i]);
+                // pnq += mysql_real_escape_string(conn, pnq, hex2char(pd[i], plen[i]), plen[i]);
+                // pnq += mysql_real_escape_string(conn, pnq, pd[i], plen[i] + 8);
+                mexPrintf("Running pointer to Query: %s\n", nq);
                 mxFree(pd[i]);
             }
+            mexPrintf("Processed Query: %s\n", nq);
             memcpy(pnq, poq, lq-(poq-query)+1);
             // replace the old query by the new one
             pnq += lq-(poq-query)+1;
@@ -826,6 +836,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         }
 
         //  Execute the query (data stays on server)
+        mexPrintf("Final Query: %s\n", query);
         if (nac!=0) {
             if (mysql_real_query(conn, query, lq))
                 mexErrMsgTxt(mysql_error(conn));
@@ -882,10 +893,14 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         //fix_types(f, res);
         //  Create field list
         const char **fieldnames=(const char **)mxMalloc(nfield*sizeof(char*));
+        // const char **types=(const char **)mxMalloc(nfield*sizeof(char*));
         //
+        mexPrintf("Raphael logs...\n");
         for (ulong j=0; j<nfield;j++)
         {
             fieldnames[j]=f[j].name;
+            // types[j]=f[j].type;
+            mexPrintf("Field: %s\n", fieldnames[j]);
         }
         //  Create the Matlab structure for output
         
@@ -951,10 +966,314 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                     tmpPr=mxGetField(plhs[0],0,f[j].name);
                     mxSetCell(tmpPr, i, deserialize(row[j], p_lengths[j]));
                 }
+                // else if ((f[j].type==FIELD_TYPE_STRING))
+                // {
+                //     mexPrintf("Binary detected.\n");
+                //     tmpPr=mxGetField(plhs[0],0,f[j].name);
+                //     // mxArray*c = mxCreateString(row[j]);
+
+                //     // const char **strings=(const char **)mxMalloc(1*sizeof(char*));
+                //     // uint8_t* p;
+                //     // std::string str = row[j];
+                //     // p = new uint8_t[str.length() + 1];
+                //     // memcpy (p, str.c_str(), str.length() + 1);
+                //     // for( unsigned int a = 0; a < 16; a = a + 1 )
+                //     // {
+                //     //      mexPrintf("uint8 idx: %d.\n",p[a]);
+                //     // }
+                //     // strings[0]=str.c_str();
+                //     // mxArray*c = mxCreateCharMatrixFromStrings(1, strings);
+
+
+                //     const char **strings=(const char **)mxMalloc(1*sizeof(char*));
+                //     uint8_t* p = (uint8_t *)row[j];
+                //     for( unsigned int a = 0; a < 16; a = a + 1 )
+                //     {
+                //          mexPrintf("uint8 idx: %d.\n",p[a]);
+                //     }
+                //     strings[0]=row[j];
+                //     mxArray*c = mxCreateCharMatrixFromStrings(1, strings);
+
+
+                //     // std::string name(row[j]);
+                //     // // std::string name("u.túøJ´ýèïr¾");
+                //     // const uint8_t* p = reinterpret_cast<const uint8_t*>(name.c_str());
+
+                //     // for( unsigned int a = 0; a < 16; a = a + 1 )
+                //     // {
+                //     //      mexPrintf("uint8 idx: %d.\n",p[a]);
+                //     // }
+
+                //     // // strings[0]=row[j];
+                //     // strings[0]=str.c_str();
+                //     // // std::vector<uint8_t> myVector(strings[0].begin(), strings[0].end());
+                //     // // uint8_t *p = &myVector[0];
+                //     // // mexPrintf("uint8 length: %d.\n",p);
+                //     // mxArray*c = mxCreateCharMatrixFromStrings(1, strings);
+                //     // // mxArray*c = mxCreateString(str);
+                //     // mexPrintf("Value str: %s\n", str);
+                //     mexPrintf("Value char: %s\n", strings[0]);
+                //     // char type_raphael = static_cast<char>(f[j].type);
+                //     // char* point = type_raphael;
+                //     // mexPrintf("Datatype MySQL: %s\n", types[j]);
+                //     // mxSetCell(tmpPr, i, c);
+                //     mxSetCell(tmpPr, i, c);
+                // }
                 else {
+                    mexPrintf("String detected.\n");
                     tmpPr=mxGetField(plhs[0],0,f[j].name);
-                    mxArray*c = mxCreateString(row[j]);
+                    mxArray*c;
+                    if (f[j].flags & BINARY_FLAG) {
+                        mexPrintf("Has Binary flag.\n");
+
+                        // c = mxCreateString(hex2char(row[j], p_lengths[j]));
+
+                        uint8_t* p = (uint8_t *)row[j];
+                        c = mxCreateNumericMatrix (1, p_lengths[j], mxUINT8_CLASS, mxREAL);
+                        uint8_t* vro = (uint8_t*)mxGetData(c);
+                        for (int k=0; k < p_lengths[j]; k++) {
+                            vro[k] = p[k];
+                        }
+                    } else {
+                        mexPrintf("Does not have Binary flag.\n");
+                        c = mxCreateString(row[j]);
+                    }
+
+                    // mxArray*c = mxCreateString(row[j]);
+                    // mxArray*c = mxCreateString(hex2char(row[j], p_lengths[j]));
                     mxSetCell(tmpPr, i, c);
+                    // mxArray*c = matrix::detail::noninlined::mx_array_api::mxCreateString_UTF8(row[j]);
+                    // mxArray*d = (mxArray *) mxSerialize(c);
+                    // mxArray*c = mxCreateString_UTF8(row[j]);
+                    // mxArray* d = (mxArray *) mxSerialize(c);
+
+                    // mexPrintf("Writing file.\n");
+
+                    // // char p[16];
+                    // char *p = new char[16];
+                    // // uint8_t p[1];
+                    // p[0] = 0x1D;
+                    // p[1] = 0x75;
+                    // p[2] = 0x1E;
+                    // p[3] = 0x2E;
+                    // p[4] = 0x1E;
+                    // p[5] = 0x74;
+                    // p[6] = 0xFA;
+                    // p[7] = 0xF8;
+                    // p[8] = 0x4A;
+                    // p[9] = 0xB4;
+                    // p[10] = 0x85;
+                    // p[11] = 0xFD;
+                    // p[12] = 0xE8;
+                    // p[13] = 0xEF;
+                    // p[14] = 0x72;
+                    // p[15] = 0xBE;
+
+                    // uint8_t* pnt = (uint8_t *)p;
+                    // uint8_t* pnt1 = (uint8_t *)row[j];
+                    // for( unsigned int a = 0; a < 16; a = a + 1 )
+                    // {
+                    //     mexPrintf("uint8 idx: %d.\n",pnt[a]);
+                    //     mexPrintf("uint8 row idx: %d.\n",pnt1[a]);
+                    // }
+
+                    // bool equal = (row[j] == p);
+                    // if (!equal) {
+                    //     mexPrintf("Not equal in value.\n");
+                    // }
+
+                    // bool equal1 = (pnt == pnt1);
+                    // if (!equal1) {
+                    //     mexPrintf("Not equal in uint8 value.\n");
+                    // }
+
+                    // // char p[16];
+                    // char *p = new char[16];
+                    // // uint8_t p[1];
+                    // p[0] = 0x1D; //29
+                    // p[1] = 0x75; //117
+                    // p[2] = 0x1E; //30
+                    // p[3] = 0x2E; //46
+                    // p[4] = 0x1E; //30
+                    // p[5] = 0x74; //116
+                    // p[6] = 0x; //195
+                    // p[7] = 0x; //186
+                    // p[8] = 0x; //195
+                    // p[9] = 0x; //184
+                    // p[10] = 0x; //74
+                    // p[11] = 0x; //194
+                    // p[12] = 0x; //180
+                    // p[13] = 0x; //194
+                    // p[14] = 0x; //133
+                    // p[15] = 0x; //195
+
+                    // char *p = "u.túøJ´ýèïr¾";
+
+                    // uint16_t* pnt = (uint16_t *)p;
+                    // for( unsigned int a = 0; a < 16; a = a + 1 )
+                    // {
+                    //      mexPrintf("uint8 idx: %d.\n",pnt[a]);
+                    // }
+                    
+                    // // string file_path;
+                    // // string file_content;
+
+                    // char* file_path;
+                    // char* file_content;
+
+                    // ofstream myfile;
+                    // file_path = "/src/print2.txt";
+
+                    // // file_content = u8"u.túøJ´ýèïr¾";
+                    // file_content = (char*)pnt;
+                    // // file_content = p;
+                    // // file_content = row[j];
+
+                    // // std::string str = row[j];
+                    // // file_content = str.c_str();
+                    
+                    // myfile.open (file_path);
+                    // myfile << file_content;
+                    // myfile.close();
+
+                    // mxSetCell(tmpPr, i, c);
+
+
+
+                    // mexPrintf("New String detected.\n");
+                    // tmpPr=mxGetField(plhs[0],0,f[j].name);
+
+                    // // uint8_t* p = (uint8_t *)row[j];
+                    // // mwArray* c = UTF8CStringToMwArrayUint8(p, 16);
+
+
+                    // // std::string u8str = row[j];
+                    // // std::u16string u16str = std::wstring_convert< std::codecvt_utf8_utf16< char16_t >, char16_t >{}.from_bytes( u8str );
+
+
+                    // std::string u8str = row[j];
+                    // std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
+                    // std::u16string u16str = converter.from_bytes(u8str);
+
+
+                    // // mwSize sz[ 2 ] = { 1, u16str.size() + 1 }; // +1 to include terminating null character
+                    // mwSize sz[ 2 ] = { 1, u16str.size() }; // +1 to include terminating null character
+                    // mxArray* c = mxCreateCharArray( 2, sz );
+                    // // std::copy( u16str.begin(), u16str.end() + 1, mxGetChars( c )); // again +1 for terminating null character
+                    // std::copy( u16str.begin(), u16str.end(), mxGetChars( c )); // again +1 for terminating null character
+
+                    // mxSetCell(tmpPr, i, c);
+
+
+                    // mexPrintf("Binary detected.\n");
+                    // tmpPr=mxGetField(plhs[0],0,f[j].name);
+                    // uint8_t* p = (uint8_t *)row[j];
+                    // mxArray*c = mxCreateNumericMatrix (1, p_lengths[j], mxUINT8_CLASS, mxREAL);
+                    // uint8_t* vro = (uint8_t*)mxGetData(c);
+                    // for (int k=0; k < p_lengths[j]; k++) {
+                    //     vro[k] = p[k];
+                    // }
+                    // mxSetCell(tmpPr, i, c);
+
+
+
+                    // mexPrintf("Binary detected.\n");
+                    // tmpPr=mxGetField(plhs[0],0,f[j].name);
+                    // uint8_t* p = (uint8_t *)row[j];
+                    // mwSize *dims = (mwSize *) mxMalloc (2 * sizeof (mwSize));
+                    // dims[0] = 1; dims[1] = p_lengths[j];
+                    // mxArray*c = mxCreateCharArray (2, dims);
+                    // char* vro = (char*)mxGetData(c);
+                    // for (int k=0; k < p_lengths[j]; k++) {
+                    //     vro[k] = char(p[k]);
+                    // }
+                    // mxSetCell(tmpPr, i, c);
+
+                    // mexPrintf("Binary detected.\n");
+                    // tmpPr=mxGetField(plhs[0],0,f[j].name);
+                    // uint16_t* p = (uint16_t *)row[j];
+                    // mxArray*c = mxCreateNumericMatrix (1, p_lengths[j], mxUINT16_CLASS, mxREAL);
+                    // uint16_t* vro = (uint16_t*)mxGetData(c);
+                    // for (int k=0; k < p_lengths[j]; k++) {
+                    //     vro[k] = p[k];
+                    // }
+                    // mxSetCell(tmpPr, i, c);
+
+
+                    // mexPrintf("Binary detected.\n");
+                    // char hex_val []= "1d751e2e1e74faf84ab485fde8ef72be";
+                    // char data [33];
+                    // int hexDataSize = 32;
+
+                    // for (int k = 0, l = 0; k < hexDataSize; k += 2, ++l) {
+                    //     int character;
+                    //     sscanf(&hex_val[k], "%2x", &character);
+                    //     data[l] = static_cast<char>(character);
+                    // }
+                    // data[hexDataSize/2] = 0;
+
+                    // tmpPr=mxGetField(plhs[0],0,f[j].name);
+                    // mxArray*c = mxCreateString(data);
+                    // mxSetCell(tmpPr, i, c);
+
+
+                    // mexPrintf("Binary detected.\n");
+                    // tmpPr=mxGetField(plhs[0],0,f[j].name);
+                    // uint8_t* p = (uint8_t *)row[j];
+                    // mxArray*c = mxCreateNumericMatrix (1, p_lengths[j], mxUINT8_CLASS, mxREAL);
+                    // uint8_t* vro = (uint8_t*)mxGetData(c);
+                    // for (int k=0; k < p_lengths[j]; k++) {
+                    //     vro[k] = p[k];
+                    // }
+                    // char *filename = mxArrayToString(prhs[0]);
+                    
+
+                    // mxArray* encodingString = mxCreateString("UTF-8");
+                    // mxArray lhs_native2unicode[1]; 
+                    // mxArray rhs_native2unicode[] = {c,  encodingString};
+
+                    // mexCallMATLAB(1, lhs_native2unicode, 2, rhs_native2unicode, 'native2unicode');
+                    // mxArray* charArray = lhs_native2unicode[1];
+                    // mxSetCell(tmpPr, i, c);
+
+
+
+
+
+                    // mexPrintf("Binary detected.\n");
+                    // tmpPr=mxGetField(plhs[0],0,f[j].name);
+                    // // mxArray*c = mxCreateString(row[j]);
+
+                    // const char **strings=(const char **)mxMalloc(1*sizeof(char*));
+                    // uint8_t* p = (uint8_t *)row[j];
+                    // // mexPrintf("size of uint8: %d.\n",p[a]);
+                    // for( unsigned int a = 0; a < 16; a = a + 1 )
+                    // {
+                    //      mexPrintf("uint8 idx: %d.\n",p[a]);
+                    // }
+                    // strings[0]=row[j];
+                    // mxArray*c = mxCreateCharMatrixFromStrings(1, strings);
+
+                    // mexPrintf("Value char: %s\n", strings[0]);
+ 
+                    // mxSetCell(tmpPr, i, c);
+
+
+
+
+
+                    // mexPrintf("String detected.\n");
+                    // tmpPr=mxGetField(plhs[0],0,f[j].name);
+
+                    // // char *val_rapha;
+                    // // val_rapha = mxArrayToString_UTF8(row[j]); // get UTF-8 encoded string from Unicode
+                    // // print_hex(str, strlen(str));         // print bytes
+                    // mxArray*c = mxCreateString_UTF8(row[j]);  // create Unicode string from UTF-8
+
+                    // // mxArray*c = mxCreateString(row[j]);
+
+
+                    // mxSetCell(tmpPr, i, c);
                 }
             }
         }
@@ -1496,7 +1815,10 @@ char* serializeSparse(size_t &rnBytes, const mxArray *rpArray,
 // Serialize a matlab string
 char* serializeString(size_t &rnBytes, const mxArray*rpArray, const char*rpArg, const bool) {
     const mwSize* pdims = mxGetDimensions(rpArray);
-    const size_t length = std::max<size_t>(pdims[0], pdims[1]);
+    // assumes strings are only uint8_t
+    size_t length = std::max<size_t>(pdims[0], pdims[1]);
+    // const size_t length = std::max<size_t>(pdims[0], pdims[1]) + 4;
+    // mexPrintf("Char length : %d\n", length);
     const mwSize n_dims = mxGetNumberOfDimensions(rpArray);
     char* p_buf = NULL;
     if (mxIsEmpty(rpArray)) {
@@ -1509,8 +1831,13 @@ char* serializeString(size_t &rnBytes, const mxArray*rpArray, const char*rpArg, 
         if ((n_dims!=2) || !((pdims[0]==1) || (pdims[1]==1)))
             mexErrMsgTxt("String placeholders only accept CHAR 1-by-M arrays or M-by-1!");
         // matlab string
-        p_buf = (char*)mxCalloc(length+1, sizeof(char));
-        mxGetString(rpArray, p_buf, length+1);
+        p_buf = mxArrayToString(rpArray);
+        length = strlen(p_buf);
+        // p_buf = (char*)mxCalloc(length+1, sizeof(char));
+        // mxGetString(rpArray, p_buf, length+1);
+        // mxGetString(rpArray, p_buf, length+9);
+        mexPrintf("Serialized string: %s\n", p_buf);
+        mexPrintf("Length serialized string: %d\n", length+1);
         rnBytes = length;
     }
     else if (mxIsNumeric(rpArray)||mxIsLogical(rpArray)) {
@@ -1575,12 +1902,16 @@ char* serializeString(size_t &rnBytes, const mxArray*rpArray, const char*rpArg, 
     else
         mexErrMsgTxt("Only char string and non-complex scalar are supported");
     return p_buf;
+    // return (char*)"hello_2";
 }
 // serialize binary data, given as a UINT8 vector
 char* serializeBinary(size_t &rnBytes, const mxArray*rpArray, const char*rpArg, const bool) {
+    mexPrintf("Serialized binary.\n");
     rnBytes = mxGetNumberOfElements(rpArray);
     char*p_buf = (char*)mxCalloc(rnBytes, sizeof(char));
     memcpy(p_buf, (const char*)mxGetData(rpArray), rnBytes);
+    mexPrintf("Serialized binary: %s.\n", p_buf);
+    mexPrintf("Length serialized binary: %d.\n", rnBytes);
     return p_buf;
 }
 // Serialize a file, the filename is given
@@ -1946,4 +2277,115 @@ mxArray* deserialize(const char* rpSerial, const size_t rlength) {
     if (used_compression)
         mxFree(p_cmp);
     return p_res;
+}
+
+// char* hex2char(char* original_val, const size_t vlength) {
+//     // char *result_val;
+//     uint8_t *result_pnt = new uint8_t[16+8];
+//     int offset = 0;
+
+//     uint8_t* pnt = (uint8_t *)original_val;
+//     // mexPrintf("Uint8 length: %d.\n", vlength);
+//     for( unsigned int a = 0; a < vlength; a = a + 1 )
+//     {
+//         // mexPrintf("-------------.\n");
+//         // mexPrintf("Uint8 value: %d.\n", pnt[a]);
+//         // result_pnt[a+offset] = pnt[a];
+//         if     (pnt[a]<=0x7F) { 
+//             // mexPrintf("Case 1.\n"); 
+//             result_pnt[a+offset] = pnt[a];
+//             // mexPrintf("New hex1 value: %d.\n", result_pnt[a+offset]);
+//         }
+//         else if(pnt[a]<=0x7FF) { 
+//             // mexPrintf("Case 2.\n"); 
+//             result_pnt[a+offset] = ((pnt[a]>>6)+192); 
+//             result_pnt[a+offset+1] = ((pnt[a]&63)+128);
+//             offset += 1;
+//             // mexPrintf("New hex1 value: %d.\n", result_pnt[a+offset]);
+//             // mexPrintf("New hex2 value: %d.\n", result_pnt[a+offset+1]);
+//         }
+//         else if(0xd800<=pnt[a] && pnt[a]<=0xdfff) { 
+//             // mexPrintf("Case 3.\n"); 
+//         } //invalid block of utf8
+//         else if(pnt[a]<=0xFFFF) { 
+//             // mexPrintf("Case 4.\n"); 
+//             result_pnt[a+offset] = ((pnt[a]>>12)+224); 
+//             result_pnt[a+offset+1]= (((pnt[a]>>6)&63)+128); 
+//             result_pnt[a+offset+2]= ((pnt[a]&63)+128);
+//             offset += 2; 
+//         }
+//         else if(pnt[a]<=0x10FFFF) { 
+//             // mexPrintf("Case 5.\n"); 
+//             result_pnt[a+offset] = ((pnt[a]>>18)+240); 
+//             result_pnt[a+offset+1] = (((pnt[a]>>12)&63)+128); 
+//             result_pnt[a+offset+2] = (((pnt[a]>>6)&63)+128); 
+//             result_pnt[a+offset+3]= ((pnt[a]&63)+128);
+//             offset += 3; 
+//         }
+//     }
+//     result_pnt[vlength+offset]= 0x00;
+
+//     return (char*)result_pnt;
+// }
+
+char* hex2char(char* original_val, const size_t vlength) {
+    // char *result_val;
+    uint8_t *result_pnt = new uint8_t[16+8];
+    int offset = 0;
+
+    uint8_t* pnt = (uint8_t *)original_val;
+    // mexPrintf("Uint8 length: %d.\n", vlength);
+    for( unsigned int a = 0; a < vlength; a = a + 1 )
+    {
+        // mexPrintf("-------------.\n");
+        // mexPrintf("Uint8 value: %d.\n", pnt[a]);
+        // result_pnt[a+offset] = pnt[a];
+        if     (pnt[a]<=0x7F) { 
+            // mexPrintf("Case 1.\n"); 
+            result_pnt[a+offset] = pnt[a];
+            // mexPrintf("New hex1 value: %d.\n", result_pnt[a+offset]);
+        }
+        else if(pnt[a]<=0x7FF) { 
+            // mexPrintf("Case 2.\n"); 
+            result_pnt[a+offset] = ((pnt[a]>>6)+192); 
+            result_pnt[a+offset+1] = ((pnt[a]&63)+128);
+            offset += 1;
+            // mexPrintf("New hex1 value: %d.\n", result_pnt[a+offset]);
+            // mexPrintf("New hex2 value: %d.\n", result_pnt[a+offset+1]);
+        }
+        else if(0xd800<=pnt[a] && pnt[a]<=0xdfff) { 
+            // mexPrintf("Case 3.\n"); 
+        } //invalid block of utf8
+        else if(pnt[a]<=0xFFFF) { 
+            // mexPrintf("Case 4.\n"); 
+            result_pnt[a+offset] = ((pnt[a]>>12)+224); 
+            result_pnt[a+offset+1]= (((pnt[a]>>6)&63)+128); 
+            result_pnt[a+offset+2]= ((pnt[a]&63)+128);
+            offset += 2; 
+        }
+        else if(pnt[a]<=0x10FFFF) { 
+            // mexPrintf("Case 5.\n"); 
+            result_pnt[a+offset] = ((pnt[a]>>18)+240); 
+            result_pnt[a+offset+1] = (((pnt[a]>>12)&63)+128); 
+            result_pnt[a+offset+2] = (((pnt[a]>>6)&63)+128); 
+            result_pnt[a+offset+3]= ((pnt[a]&63)+128);
+            offset += 3; 
+        }
+    }
+    result_pnt[vlength+offset]= 0x00;
+
+    // mexPrintf("Writing file.\n");
+    // char* file_path;
+    // char* file_content;
+
+    // ofstream myfile;
+    // file_path = "/src/print5.txt";
+    // // file_content = "ýýýý";
+    // file_content = original_val;
+    
+    // myfile.open (file_path);
+    // myfile << file_content;
+    // myfile.close();
+
+    return (char*)result_pnt;
 }

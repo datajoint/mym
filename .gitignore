@@ -1,5 +1,5 @@
 mym.o
-build/*
+build
 docker-compose.yml
 *.env
-notebook/*
+notebook

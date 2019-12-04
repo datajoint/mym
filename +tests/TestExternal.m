@@ -19,7 +19,8 @@ classdef TestExternal < tests.Prep
                 [4.5342;123.3145;345.2133],
                 multi,
                 'hello',
-                ''
+                '',
+                uint8([29, 117, 30, 46, 30, 116, 250, 248, 74, 180, 133, 253, 232, 239, 114, 190])
             };
 
             % user cellfun

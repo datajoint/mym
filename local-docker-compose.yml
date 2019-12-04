@@ -23,6 +23,8 @@ services:
         condition: service_healthy
     ports:
       - "8888:8888"
+      - "9091:9091"
+    privileged: true
     user: ${MATLAB_UID}:${MATLAB_GID}
     working_dir: /src
     command: > 
@@ -35,6 +37,12 @@ services:
           \";
         ## Interactive Jupyter Notebook environment
         jupyter notebook;
+        # apt-get -y install gdb
+        # export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libexpatw.so.1;
+        # matlab -Dgdb;
+        # handle SIGSEGV SIGBUS nostop noprint
+        # handle SIGUSR1 stop print
+        # run -nojvm
       "
     mac_address: $MATLAB_HOSTID
     volumes:

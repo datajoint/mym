@@ -49,6 +49,29 @@
 #include <zlib.h>
 #include <math.h>
 #include "matrix.h"
+#include <string>         // std::string, std::wstring
+#include <locale>         // std::wstring_convert
+#include <codecvt>        // std::codecvt_utf8
+#include <cstdio>
+#include <iostream>
+#include <fstream>
+using namespace std;
+// #include <vector>
+// #include <stdint.h>
+
+// // MX_API_VER has unfortunately not changed between R2013b and R2014a,
+// // so we use the new MATRIX_DLL_EXPORT_SYM as an ugly hack instead
+// #if defined(__cplusplus) && defined(MATRIX_DLL_EXPORT_SYM)
+//     #define EXTERN_C extern
+//     namespace matrix{ namespace detail{ namespace noninlined{ namespace mx_array_api{
+// #endif
+// EXTERN_C mxArray *mxCreateString_UTF8(const char *str);
+// EXTERN_C mxArray* mxSerialize(mxArray const *);
+// // and so on, for any other MEX C functions that migrated to C++ in R2014a
+// #if defined(__cplusplus) && defined(MATRIX_DLL_EXPORT_SYM)
+//     }}}}
+//     using namespace matrix::detail::noninlined::mx_array_api;
+// #endif
 
 // We need a platform- and compiler-independent (rofl) fixed size 64 bit integer
 #include <stdint.h>
@@ -181,5 +204,5 @@ enum CMD_FLAGS {
 
 static void getSerialFct(const char* rpt, const mxArray* rparg, pfserial& rpf, bool& rpec);
 mxArray* deserialize(const char* rpSerial, const size_t rlength);
-
+char* hex2char(char* original_val, const size_t vlength);
 #endif // MY_MAT_H
