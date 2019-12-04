@@ -9,6 +9,7 @@ classdef Prep < matlab.unittest.TestCase
             'host', getenv('DJ_TEST_HOST'), ...
             'user', getenv('DJ_TEST_USER'), ...
             'password', getenv('DJ_TEST_PASSWORD'));
+        PREFIX = 'djtest';
     end
 
     methods (TestClassSetup)
@@ -87,6 +88,13 @@ classdef Prep < matlab.unittest.TestCase
             curr_conn = mym(-1, 'open', testCase.CONN_INFO_ROOT.host, ...
                 testCase.CONN_INFO_ROOT.user, testCase.CONN_INFO_ROOT.password, ...
                 'false');
+
+            mym(curr_conn, 'SET FOREIGN_KEY_CHECKS=0;');
+            res = mym(curr_conn, ['SHOW DATABASES LIKE "' testCase.PREFIX '_%";']);
+            for i = 1:length(res.(['Database (' testCase.PREFIX '_%)']))
+                mym(curr_conn, ['DROP DATABASE ' res.(['Database (' testCase.PREFIX '_%)']){i} ';']);
+            end
+            mym(curr_conn, 'SET FOREIGN_KEY_CHECKS=1;');
 
             cmd = {...
             'DROP USER ''datajoint''@''%%'';'
