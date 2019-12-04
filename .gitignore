@@ -3,3 +3,4 @@ build
 docker-compose.yml
 *.env
 notebook
+.vscode
