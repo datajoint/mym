@@ -42,7 +42,7 @@ services:
       - .:/src
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       ## Additional mounts may go here
-      - ./notebook:/home/muser/notebooks
+      # - ./notebook:/home/muser/notebooks
   db:
     <<: *net
     image: datajoint/mysql:${MYSQL_TAG}
