@@ -16,7 +16,7 @@ classdef Prep < matlab.unittest.TestCase
         function init(testCase)
             disp('---------------INIT---------------');
             clear functions;
-            addpath('./distribution/mexa64');
+            addpath(['./distribution/' mexext()]);
 
             curr_conn = mym(-1, 'open', testCase.CONN_INFO_ROOT.host, ...
                 testCase.CONN_INFO_ROOT.user, testCase.CONN_INFO_ROOT.password, ...
@@ -106,7 +106,7 @@ classdef Prep < matlab.unittest.TestCase
             mym('closeall');
 
             warning('on','MATLAB:RMDIR:RemovedFromPath');
-            rmpath('./distribution/mexa64')
+            rmpath(['./distribution/' mexext()])
         end
     end
 end
