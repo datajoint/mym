@@ -89,13 +89,13 @@ classdef Prep < matlab.unittest.TestCase
                 testCase.CONN_INFO_ROOT.user, testCase.CONN_INFO_ROOT.password, ...
                 'false');
 
-            mym(curr_conn, 'SET FOREIGN_KEY_CHECKS=0;');
-            res = mym(curr_conn, ['SHOW DATABASES LIKE "' testCase.PREFIX '_%";']);
-            for i = 1:length(res.(['Database (' testCase.PREFIX '_%)']))
-                mym(curr_conn, ...
-                    ['DROP DATABASE ' res.(['Database (' testCase.PREFIX '_%)']){i} ';']);
-            end
-            mym(curr_conn, 'SET FOREIGN_KEY_CHECKS=1;');
+            % mym(curr_conn, 'SET FOREIGN_KEY_CHECKS=0;');
+            % res = mym(curr_conn, ['SHOW DATABASES LIKE "' testCase.PREFIX '_%";']);
+            % for i = 1:length(res.(['Database (' testCase.PREFIX '_%)']))
+            %     mym(curr_conn, ...
+            %         ['DROP DATABASE ' res.(['Database (' testCase.PREFIX '_%)']){i} ';']);
+            % end
+            % mym(curr_conn, 'SET FOREIGN_KEY_CHECKS=1;');
 
             cmd = {...
             'DROP USER ''datajoint''@''%%'';'

@@ -11,7 +11,7 @@ classdef TestInsertFetch < tests.Prep
 
             testCase.check(curr_conn, 'varchar(7)','','S','raphael');
             testCase.check(curr_conn, 'longblob','','M',int64([1;2]));
-            testCase.check(curr_conn, 'varchar(8)','','S','ýýýý');
+            testCase.check(curr_conn, 'varchar(4)','','S','ýýýý');
 
             data = '1d751e2e-1e74-faf8-4ab4-85fde8ef72be';
             data = strrep(data, '-', '');
@@ -32,7 +32,7 @@ classdef TestInsertFetch < tests.Prep
             decMtx = hex2dec(hexMtx);
             v = uint8(decMtx);
             v_char = char(v)';
-            testCase.check(curr_conn, 'varchar(24)','','S',v_char);
+            testCase.check(curr_conn, 'varchar(16)','','S',v_char);
 
             mym('closeall');
         end
@@ -52,6 +52,8 @@ classdef TestInsertFetch < tests.Prep
                 '` (`id`,`name`) VALUES (0,"{' flag '}") '],data);
             res = mym(conn_id, ['select * from `djtest_insert`.`' table_name '`']);
             ret = res.name{1};
+            disp(ret);
+            disp(data);
             assert(all(ret == data));
         end
     end
