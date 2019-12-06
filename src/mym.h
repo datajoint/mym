@@ -49,7 +49,6 @@
 #include <zlib.h>
 #include <math.h>
 #include "matrix.h"
-#include <string>
 
 // We need a platform- and compiler-independent (rofl) fixed size 64 bit integer
 #include <stdint.h>
@@ -184,6 +183,5 @@ static void getSerialFct(const char* rpt, const mxArray* rparg, pfserial& rpf, b
 mxArray* deserialize(const char* rpSerial, const size_t rlength);
 char* hex2char(char* original_val, const size_t vlength);
 char* char2hex(char* original_val, const size_t vlength, const size_t char_length);
-inline bool isutf(char c);
 
 #endif // MY_MAT_H
