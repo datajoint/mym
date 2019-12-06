@@ -1813,7 +1813,7 @@ mxArray* deserialize(const char* rpSerial, const size_t rlength) {
 }
 char* hex2char(char* original_val, const size_t char_length) {
     const uint8_t* pnt = (uint8_t *)original_val;
-    uint8_t *result_pnt = new uint8_t[char_length];
+    uint8_t *result_pnt = new uint8_t[char_length*4];
     unsigned int offset = 0;
     for( unsigned int a = 0; a < char_length; a = a + 1 )
     {
