@@ -1812,9 +1812,9 @@ mxArray* deserialize(const char* rpSerial, const size_t rlength) {
     return p_res;
 }
 char* hex2char(char* original_val, const size_t char_length) {
-    uint8_t* pnt = (uint8_t *)original_val;
+    const uint8_t* pnt = (uint8_t *)original_val;
     uint8_t *result_pnt = new uint8_t[char_length];
-    int offset = 0;
+    unsigned int offset = 0;
     for( unsigned int a = 0; a < char_length; a = a + 1 )
     {
         if     (pnt[a]<=0x7F) {
@@ -1847,8 +1847,8 @@ char* hex2char(char* original_val, const size_t char_length) {
     return (char*)result_pnt;
 }
 char* char2hex(char* original_val, const size_t vlength, const size_t char_length) {
-    int idx = 0;
-    int l = 0;
+    unsigned int idx = 0;
+    unsigned int l = 0;
     unsigned char u0,u1,u2,u3;
     uint8_t *result_pnt = new uint8_t[char_length];
     for(unsigned int a = 0; a < vlength;)
