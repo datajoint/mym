@@ -9,14 +9,14 @@ classdef Prep < matlab.unittest.TestCase
             'host', getenv('DJ_TEST_HOST'), ...
             'user', getenv('DJ_TEST_USER'), ...
             'password', getenv('DJ_TEST_PASSWORD'));
+        PREFIX = 'djtest';
     end
 
     methods (TestClassSetup)
         function init(testCase)
             disp('---------------INIT---------------');
             clear functions;
-            testCase.addTeardown(@testCase.dispose);
-            addpath('./distribution/mexa64');
+            addpath(['./distribution/' mexext()]);
 
             curr_conn = mym(-1, 'open', testCase.CONN_INFO_ROOT.host, ...
                 testCase.CONN_INFO_ROOT.user, testCase.CONN_INFO_ROOT.password, ...
@@ -80,15 +80,22 @@ classdef Prep < matlab.unittest.TestCase
             mym('closeall');
         end
     end
-       
-    methods (Static)
-        function dispose()
+    methods (TestClassTeardown)
+        function dispose(testCase)
             disp('---------------DISP---------------');
             warning('off','MATLAB:RMDIR:RemovedFromPath');
             
-            curr_conn = mym(-1, 'open', tests.Prep.CONN_INFO_ROOT.host, ...
-                tests.Prep.CONN_INFO_ROOT.user, tests.Prep.CONN_INFO_ROOT.password, ...
+            curr_conn = mym(-1, 'open', testCase.CONN_INFO_ROOT.host, ...
+                testCase.CONN_INFO_ROOT.user, testCase.CONN_INFO_ROOT.password, ...
                 'false');
+
+            mym(curr_conn, 'SET FOREIGN_KEY_CHECKS=0;');
+            res = mym(curr_conn, ['SHOW DATABASES LIKE "' testCase.PREFIX '_%";']);
+            for i = 1:length(res.(['Database (' testCase.PREFIX '_%)']))
+                mym(curr_conn, ...
+                    ['DROP DATABASE ' res.(['Database (' testCase.PREFIX '_%)']){i} ';']);
+            end
+            mym(curr_conn, 'SET FOREIGN_KEY_CHECKS=1;');
 
             cmd = {...
             'DROP USER ''datajoint''@''%%'';'
@@ -99,7 +106,7 @@ classdef Prep < matlab.unittest.TestCase
             mym('closeall');
 
             warning('on','MATLAB:RMDIR:RemovedFromPath');
-            rmpath('./distribution/mexa64')
+            rmpath(['./distribution/' mexext()])
         end
     end
 end

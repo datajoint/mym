@@ -25,6 +25,7 @@ services:
     command: > 
       /bin/bash -c "
         matlab -nodisplay -r \"\
+            feature('DefaultCharacterSet','UTF-8');\
             res=run(tests.Main);\
             disp(res);\
             if all([res.Passed])  exit, else exit(1), end;\

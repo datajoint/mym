@@ -785,6 +785,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                 pnq += po[i]-poq;
                 poq = po[i]+ps[i];
                 pnq += mysql_real_escape_string(conn, pnq, pd[i], plen[i]);
+                pd[i]=NULL;
                 mxFree(pd[i]);
             }
             memcpy(pnq, poq, lq-(poq-query)+1);
@@ -945,7 +946,17 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                 }
                 else {
                     tmpPr=mxGetField(plhs[0],0,f[j].name);
-                    mxArray*c = mxCreateString(row[j]);
+                    mxArray*c;
+                    if (f[j].flags & BINARY_FLAG) {
+                        static const uint8_t* p = (uint8_t *)row[j];
+                        c = mxCreateNumericMatrix (1, p_lengths[j], mxUINT8_CLASS, mxREAL);
+                        static uint8_t* vro = (uint8_t*)mxGetData(c);
+                        for (int k=0; k < p_lengths[j]; k++) {
+                            vro[k] = p[k];
+                        }
+                    } else {
+                        c = mxCreateString(hex2char(row[j], p_lengths[j]));
+                    }
                     mxSetCell(tmpPr, i, c);
                 }
             }
@@ -1362,8 +1373,8 @@ char* serializeString(size_t &rnBytes, const mxArray*rpArray, const char*rpArg, 
         if ((n_dims!=2) || !((pdims[0]==1) || (pdims[1]==1)))
             mexErrMsgTxt("String placeholders only accept CHAR 1-by-M arrays or M-by-1!");
         // matlab string
-        p_buf = (char*)mxCalloc(length+1, sizeof(char));
-        mxGetString(rpArray, p_buf, length+1);
+        p_buf = mxArrayToString(rpArray);
+        p_buf = char2hex(p_buf, strlen(p_buf), length);
         rnBytes = length;
     }
     else if (mxIsNumeric(rpArray)||mxIsLogical(rpArray)) {
@@ -1799,4 +1810,84 @@ mxArray* deserialize(const char* rpSerial, const size_t rlength) {
     if (used_compression)
         mxFree(p_cmp);
     return p_res;
+}
+char* hex2char(char* original_val, const size_t char_length) {
+    const uint8_t* pnt = (uint8_t *)original_val;
+    uint8_t *result_pnt = new uint8_t[char_length*4];
+    unsigned int offset = 0;
+    for( unsigned int a = 0; a < char_length; a = a + 1 )
+    {
+        if     (pnt[a]<=0x7F) {
+            result_pnt[a+offset] = pnt[a];
+        }
+        else if(pnt[a]<=0x7FF) {
+            result_pnt[a+offset] = ((pnt[a]>>6)+192);
+            result_pnt[a+offset+1] = ((pnt[a]&63)+128);
+            offset += 1;
+        }
+        else if(0xd800<=pnt[a] && pnt[a]<=0xdfff) {
+            mexErrMsgIdAndTxt("DataJoint:Deserialization:UTF8",
+                "Invalid block of UTF8 detected.");
+        } //invalid block of utf8
+        else if(pnt[a]<=0xFFFF) {
+            result_pnt[a+offset] = ((pnt[a]>>12)+224);
+            result_pnt[a+offset+1] = (((pnt[a]>>6)&63)+128);
+            result_pnt[a+offset+2] = ((pnt[a]&63)+128);
+            offset += 2;
+        }
+        else if(pnt[a]<=0x10FFFF) {
+            result_pnt[a+offset] = ((pnt[a]>>18)+240);
+            result_pnt[a+offset+1] = (((pnt[a]>>12)&63)+128);
+            result_pnt[a+offset+2] = (((pnt[a]>>6)&63)+128);
+            result_pnt[a+offset+3] = ((pnt[a]&63)+128);
+            offset += 3;
+        }
+    }
+    result_pnt[char_length+offset]= 0x00;
+    return (char*)result_pnt;
+}
+char* char2hex(char* original_val, const size_t vlength, const size_t char_length) {
+    unsigned int idx = 0;
+    unsigned int l = 0;
+    unsigned char u0,u1,u2,u3;
+    uint8_t *result_pnt = new uint8_t[char_length];
+    for(unsigned int a = 0; a < vlength;)
+    {
+        l = 1;
+        if((original_val[a] & 0xf8) == 0xf0) l = 4;
+        else if((original_val[a] & 0xf0) == 0xe0) l = 3;
+        else if((original_val[a] & 0xe0) == 0xc0) l = 2;
+        if((a + l) > vlength) l = 1;
+
+        u0 = original_val[a]; 
+        if (u0>=0   && u0<=127) {
+            result_pnt[idx]=u0;
+            idx++;
+        }
+
+        u1 = original_val[a+1]; 
+        if (u0>=192 && u0<=223) {
+            result_pnt[idx]=(u0-192)*64 + (u1-128);
+            idx++;
+        }
+        if (original_val[a]==0xed && (original_val[a+1] & 0xa0) == 0xa0) {
+            mexErrMsgIdAndTxt("DataJoint:Serialization:UTF8",
+                "Invalid block of UTF8 detected.");
+        } //code points, 0xd800 to 0xdfff
+
+        u2 = original_val[a+2]; 
+        if (u0>=224 && u0<=239) {
+            result_pnt[idx]=(u0-224)*4096 + (u1-128)*64 + (u2-128);
+            idx++;
+        }
+
+        u3 = original_val[a+3]; 
+        if (u0>=240 && u0<=247) {
+            result_pnt[idx]=(u0-240)*262144 + (u1-128)*4096 + (u2-128)*64 + (u3-128);
+            idx++;
+        }
+        a += l;
+    }
+    result_pnt[idx]= 0x00;
+    return (char*)result_pnt;
 }

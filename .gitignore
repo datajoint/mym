@@ -1,5 +1,9 @@
 mym.o
-build/*
+build
 docker-compose.yml
 *.env
-notebook/*
+notebook
+.vscode
+win.*
+.DS_Store
+macos.*
