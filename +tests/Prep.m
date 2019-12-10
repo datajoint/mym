@@ -90,10 +90,13 @@ classdef Prep < matlab.unittest.TestCase
                 'false');
 
             mym(curr_conn, 'SET FOREIGN_KEY_CHECKS=0;');
-            res = mym(curr_conn, ['SHOW DATABASES LIKE "' testCase.PREFIX '_%";']);
-            for i = 1:length(res.(['Database (' testCase.PREFIX '_%)']))
+            res = mym(curr_conn, ...
+                ['SELECT CAST(schema_name AS char(50)) as db ' ...
+                'FROM information_schema.schemata ' ...
+                'where schema_name like "' testCase.PREFIX '_%";']);
+            for i = 1:length(res.db)
                 mym(curr_conn, ...
-                    ['DROP DATABASE ' res.(['Database (' testCase.PREFIX '_%)']){i} ';']);
+                    ['DROP DATABASE ' res.db{i} ';']);
             end
             mym(curr_conn, 'SET FOREIGN_KEY_CHECKS=1;');
 
