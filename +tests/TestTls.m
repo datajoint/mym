@@ -40,14 +40,14 @@ classdef TestTls < tests.Prep
             st = dbstack;
             disp(['---------------' st(1).name '---------------']);
             conn = [];
-            conn(1) = check(mym(-1, 'open', testCase.CONN_INFO.host, testCase.CONN_INFO.user, ...
-                testCase.CONN_INFO.password));
+            conn(1) = check(mym(-1, 'open', testCase.CONN_INFO.host, ...
+                testCase.CONN_INFO.user, testCase.CONN_INFO.password));
 
-            conn(2) = check(mym(-1, 'open', testCase.CONN_INFO.host, testCase.CONN_INFO.user, ...
-                testCase.CONN_INFO.password, 'none'));
+            conn(2) = check(mym(-1, 'open', testCase.CONN_INFO.host, ...
+                testCase.CONN_INFO.user, testCase.CONN_INFO.password, 'none'));
 
-            conn(3) = check(mym(-1, 'open', testCase.CONN_INFO.host, testCase.CONN_INFO.user, ...
-                testCase.CONN_INFO.password, 'anything'));
+            conn(3) = check(mym(-1, 'open', testCase.CONN_INFO.host, ...
+                testCase.CONN_INFO.user, testCase.CONN_INFO.password, 'anything'));
 
             for idx = 1:length(conn)
                 mym(conn(idx), 'close');
