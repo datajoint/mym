@@ -77,7 +77,7 @@ classdef Prep < matlab.unittest.TestCase
                 };
                 mym(curr_conn, sprintf('%s',cmd{:}));
             end
-            mym('closeall');
+            mym(curr_conn, 'close');
         end
     end
     methods (TestClassTeardown)
@@ -106,10 +106,10 @@ classdef Prep < matlab.unittest.TestCase
             'DROP USER ''djssl''@''%%'';'
             };
             mym(curr_conn, sprintf('%s',cmd{:}));
-            mym('closeall');
+            mym(curr_conn, 'close');
 
             warning('on','MATLAB:RMDIR:RemovedFromPath');
-            rmpath(['./distribution/' mexext()])
+            rmpath(['./distribution/' mexext()]);
         end
     end
 end

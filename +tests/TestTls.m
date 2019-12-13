@@ -15,7 +15,7 @@ classdef TestTls < tests.Prep
 
             res = mym(curr_conn, 'SHOW STATUS LIKE ''Ssl_cipher'';');
             testCase.verifyTrue(length(res.Value{1}) > 0);
-            mym('closeall');
+            mym(curr_conn, 'close');
         end
         function testInsecureConn(testCase)
             % insecure connection test
@@ -33,22 +33,27 @@ classdef TestTls < tests.Prep
             testCase.verifyEqual( ...
                 res.Value{1}, ...
                 '');
-            mym('closeall');
+            mym(curr_conn, 'close');
         end
         function testPreferredConn(testCase)
             % preferred connection test
             st = dbstack;
             disp(['---------------' st(1).name '---------------']);
-            check(mym(-1, 'open', testCase.CONN_INFO.host, testCase.CONN_INFO.user, ...
-                testCase.CONN_INFO.password))
+            conn = [];
+            conn(1) = check(mym(-1, 'open', testCase.CONN_INFO.host, ...
+                testCase.CONN_INFO.user, testCase.CONN_INFO.password));
 
-            check(mym(-1, 'open', testCase.CONN_INFO.host, testCase.CONN_INFO.user, ...
-                testCase.CONN_INFO.password, 'none'))
+            conn(2) = check(mym(-1, 'open', testCase.CONN_INFO.host, ...
+                testCase.CONN_INFO.user, testCase.CONN_INFO.password, 'none'));
 
-            check(mym(-1, 'open', testCase.CONN_INFO.host, testCase.CONN_INFO.user, ...
-                testCase.CONN_INFO.password, 'anything'))
+            conn(3) = check(mym(-1, 'open', testCase.CONN_INFO.host, ...
+                testCase.CONN_INFO.user, testCase.CONN_INFO.password, 'anything'));
 
-            function check(conn_id)
+            for idx = 1:length(conn)
+                mym(conn(idx), 'close');
+            end
+
+            function conn_id = check(conn_id)
                 connections = evalc("mym('status')");
                 connections = splitlines(connections);
                 connections(end)=[];
@@ -57,7 +62,6 @@ classdef TestTls < tests.Prep
                 res = mym(conn_id, 'SHOW STATUS LIKE ''Ssl_cipher'';');
                 testCase.verifyTrue(length(res.Value{1}) > 0);
             end
-            mym('closeall');
         end
         function testRejectException(testCase)
             % test exception on require TLS
@@ -67,13 +71,13 @@ classdef TestTls < tests.Prep
                 curr_conn = mym(-1, 'open', testCase.CONN_INFO.host, ...
                     'djssl', 'djssl', 'false');
                 testCase.verifyTrue(false);
+                mym(curr_conn, 'close');
             catch
                 e = lasterror;
                 testCase.verifyEqual(e.identifier, 'MySQL:Error');
                 testCase.verifyTrue(contains(e.message,...
                     ["requires secure connection","Access denied"])); %MySQL8,MySQL5
             end
-            mym('closeall');
         end
     end
 end
