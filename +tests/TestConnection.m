@@ -5,11 +5,11 @@ classdef TestConnection < tests.Prep
             % force new connections test
             st = dbstack;
             disp(['---------------' st(1).name '---------------']);
-            curr_conn = mym(-1, 'open', testCase.CONN_INFO.host, ...
+            conn1 = mym(-1, 'open', testCase.CONN_INFO.host, ...
                 testCase.CONN_INFO.user, testCase.CONN_INFO.password, ...
                 'false');
 
-            curr_conn = mym(-1, 'open', testCase.CONN_INFO.host, ...
+            conn2 = mym(-1, 'open', testCase.CONN_INFO.host, ...
                 testCase.CONN_INFO.user, testCase.CONN_INFO.password, ...
                 'false');
 
@@ -18,7 +18,8 @@ classdef TestConnection < tests.Prep
             connections(end)=[];
 
             testCase.verifyEqual(length(connections), 2);
-            mym('closeall');
+            mym(conn1, 'close');
+            mym(conn2, 'close');
         end
         function testReuseConnection(testCase)
             % reuse existing connections test
@@ -38,7 +39,7 @@ classdef TestConnection < tests.Prep
 
             testCase.verifyEqual(conn1, conn2);
             testCase.verifyEqual(length(connections), 1);
-            mym('closeall');
+            mym(conn1, 'close');
         end
     end
 end

@@ -34,7 +34,7 @@ classdef TestInsertFetch < tests.Prep
             v_char = char(v)';
             testCase.check(curr_conn, 'varchar(16)','','S',v_char);
 
-            mym('closeall');
+            mym(curr_conn, 'close');
         end
     end
     methods (Static)
@@ -50,6 +50,8 @@ classdef TestInsertFetch < tests.Prep
                 '` (id int, name ' mysql_datatype dj_type_comment ');']);
             mym(conn_id, ['INSERT INTO `djtest_insert`.`' table_name ...
                 '` (`id`,`name`) VALUES (0,"{' flag '}") '],data);
+            res = mym(conn_id, ['select * from `djtest_insert`.`' table_name '`']);
+            % Verify that multiple fetch will return same data.
             res = mym(conn_id, ['select * from `djtest_insert`.`' table_name '`']);
             ret = res.name{1};
             assert(all(ret == data));
