@@ -1808,7 +1808,7 @@ mxArray* deserialize(const char* rpSerial, const size_t rlength) {
         mxFree(p_cmp);
     return p_res;
 }
-char* hex2char(char* original_val, const size_t char_length) {
+char *hex2char(char *original_val, const size_t char_length) {
     const uint8_t *pnt = (uint8_t *)original_val;
     uint8_t *result_pnt = new uint8_t[char_length*4];
     unsigned int offset = 0;
@@ -1841,9 +1841,9 @@ char* hex2char(char* original_val, const size_t char_length) {
         }
     }
     result_pnt[char_length+offset]= 0x00;
-    return (char*)result_pnt;
+    return (char *)result_pnt;
 }
-char* char2hex(char* original_val, const size_t vlength, const size_t char_length) {
+char *char2hex(char *original_val, const size_t vlength, const size_t char_length) {
     unsigned int idx = 0;
     unsigned int curr_length = 0;
     unsigned char u0,u1,u2,u3;
