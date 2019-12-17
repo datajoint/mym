@@ -12,6 +12,7 @@ classdef TestInsertFetch < tests.Prep
             testCase.check(curr_conn, 'varchar(7)','','S','raphael');
             testCase.check(curr_conn, 'longblob','','M',int64([1;2]));
             testCase.check(curr_conn, 'varchar(4)','','S','ýýýý');
+            testCase.check(curr_conn, 'datetime','','S','2018-01-24 14:34:16');
 
             data = '1d751e2e-1e74-faf8-4ab4-85fde8ef72be';
             data = strrep(data, '-', '');
