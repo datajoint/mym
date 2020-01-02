@@ -96,7 +96,12 @@
 %            as the "abc{dfg}h" is mistaken for a mYm command. A possible
 %            solution is to use the following command:
 %             mym(INSERT INTO tbl(id,txt) VALUES(1000,"{S}")','abc{dfg}h');
-%
+% mym('serialize {placeholder1},..',matlab_variable1,..)
+% -------------
+%   Return : cell array of vectors of type ubyte, a vector per matlab variable 
+% mym('deserialize', serialized_input)
+% -------------
+%   Return : matlab variable of the appropriate type 
 % mym('version')
 % --------------
 % Displays the version of mym when no output arguments are given.
