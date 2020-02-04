@@ -44,7 +44,7 @@ function res = compareVersions(verArray, verComp)
     %  - None 
     res_n = length(verArray);
     if ~res_n || max(cellfun(@(c) ~ischar(c) && ...
-            ~isstring(c),verArray)) > 0 || min(cellfun('length',verArray)) == 0
+            ~isstring(c), verArray)) > 0 || min(cellfun(@length, verArray)) == 0
         msg = {
             'compareVersions:Error:CellArray'
             'Cell array to verify must:'
