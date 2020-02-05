@@ -311,8 +311,7 @@ static void field2int(const char*s, enum_field_types t, unsigned int flags, void
  *  This is based on an original by Kimmo Uutela
  **********************************************************************/
 static char* getstring(const mxArray*a) {
-    // int llen = mxGetM(a)*mxGetN(a)*sizeof(mxChar)+1;
-    int llen = (int) mxGetM(a)* (int) mxGetN(a)*sizeof(mxChar)+1;
+    int llen = mxGetM(a)*mxGetN(a)*sizeof(mxChar)+1;
     char*c = (char*) mxCalloc(llen, sizeof(char));
     if (mxGetString(a, c, llen))
         mexErrMsgTxt("Can\'t copy string in getstring()");
@@ -503,7 +502,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         }
         else if (strstr (ssl_input,"{")) {
             mode_option = SSL_MODE_REQUIRED;
-            mexErrMsgIdAndTxt("DataJoint:TLS:InvalidStruct",
+            mexErrMsgIdAndTxt("mYm:TLS:InvalidStruct",
                 "Custom TLS struct definition not supported yet.");
         }
 
@@ -981,36 +980,39 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         unsigned query_flags = 0;
         unsigned nb_flags = 0;
         unsigned nac = 0;                                   // actual number
-//        size_t lq = strlen(query);  // original query length, needed at some point
         if (debug)
             mexPrintf("Num of args = %d\n", (int) nex) ;
 
         if (nex) {
             // local placeholders variables and constant
-            char** po = 0;                              // pointer to placeholders openning symbols
-            char** pc = 0;                              // pointer to placeholders closing symbols
-            bool*  pec = 0;                             // pointer to 'enable compression field'
-            char** pa = 0;                              // pointer to placeholder in-string argument
-            unsigned* ps = 0;                           // pointer to placeholders size (in bytes)
-            pfserial* pf = 0;                           // pointer to serialization function
+            char** po = 0;                      // pointer to placeholders openning symbols
+            char** pc = 0;                      // pointer to placeholders closing symbols
+            bool*  pec = 0;                     // pointer to 'enable compression field'
+            char** pa = 0;                      // pointer to placeholder in-string argument
+            unsigned* ps = 0;                   // pointer to placeholders size (in bytes)
+            pfserial* pf = 0;                   // pointer to serialization function
             // LOOK FOR THE PLACEHOLDERS
             po = (char**)mxCalloc(nex+1, sizeof(char*));
             pc = (char**)mxCalloc(nex+1, sizeof(char*));
             if ((po[nac++] = strstr(query, PH_OPEN)))
             while (po[nac-1]&&nac<=nex) {
-                    pc[nac-1] = strstr(po[nac-1]+1, PH_CLOSE);
-                    if (pc[nac-1]==0)
-                        mexErrMsgTxt("Placeholders are not correctly closed!");
-                    po[nac] = strstr(pc[nac-1]+1, PH_OPEN);
-                    nac++;
-                }
-            nac--; // what a wierd way to find {}s
+                pc[nac-1] = strstr(po[nac-1]+1, PH_CLOSE);
+                if (pc[nac-1]==0)
+                    mexErrMsgIdAndTxt("mYm:Serialization:Placeholders",
+                        "Placeholders are not correctly closed!");
+                po[nac] = strstr(pc[nac-1]+1, PH_OPEN);
+                nac++;
+            }
+            nac--; // utilized to find {}s
             if (nac != nex) {
-                mexErrMsgTxt("The number of placeholders differs from that of additional arguments!");
+                mexErrMsgIdAndTxt("mYm:Serialization:Placeholders",
+                    "The number of placeholders differs from that of additional arguments!");
             }
 
-            char** pd = (char**)mxCalloc(nac, sizeof(char*)); // output of serialized variable, for each placeholder
-            size_t* plen = (size_t*)mxCalloc(nac, sizeof(size_t)); // length of bytes in the serialized variable, for each place holder
+            // output of serialized variable, for each placeholder
+            char** pd = (char**)mxCalloc(nac, sizeof(char*));
+            // length of bytes in the serialized variable, for each place holder
+            size_t* plen = (size_t*)mxCalloc(nac, sizeof(size_t));
 
             // now we have the correct number of placeholders
             // read the types and in-string arguments
@@ -1020,7 +1022,8 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             pf = (pfserial*)mxCalloc(nac, sizeof(pfserial));
             for (unsigned i = 0; i<nac; i++) {
                 // placeholder function+control ph type+control arg type
-                getSerialFct(po[i]+strlen(PH_OPEN), prhs[jarg+i+1], pf[i], pec[i]); // first parameter points to the first character of placeholder
+                // first parameter points to the first character of placeholder
+                getSerialFct(po[i]+strlen(PH_OPEN), prhs[jarg+i+1], pf[i], pec[i]);
                 // placeholder size in bytes
                 ps[i] = (unsigned)(pc[i]-po[i]+strlen(PH_OPEN));
                 // placeholder in-string argument
@@ -1030,7 +1033,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                 // it will be processed anyway and we already have the original query length
             }
             if (debug)
-                mexPrintf("Num of vars = %d\n", (int) nac) ;
+                mexPrintf("Num of vars = %d\n", (int) nac);
 
             // serialize
             uLongf cmp_buf_len = 10000;
@@ -1038,7 +1041,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             size_t nb = 0;
             for (unsigned i = 0; i<nac; i++) {
                 // serialize individual field
-                pd[i] = pf[i](plen[i], prhs[jarg+i+1], pa[i], true); // serialize the variable field
+                pd[i] = pf[i](plen[i], prhs[jarg+i+1], pa[i], true);
                 if (debug)
                     mexPrintf("Length of serial string = %d\n", plen[i]) ;
                 if (pec[i] && (plen[i]>MIN_LEN_ZLIB)) { // compress if needed
@@ -1050,7 +1053,8 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                     }
                     uLongf len = cmp_buf_len;
                     if (compress(pcmp, &len, (Bytef*)pd[i], plen[i])!=Z_OK)
-                        mexErrMsgTxt("Compression failed");
+                        mexErrMsgIdAndTxt("mYm:Serialization:Compression",
+                            "Compression failed");
                     const float cmp_rate = plen[i]/(LEN_ZLIB_ID+1.f+sizeof(_uint64)+len);
                     if (cmp_rate>MIN_CMP_RATE_ZLIB) {
                         const size_t len_old = plen[i];
@@ -1061,7 +1065,8 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
 
                         *((_uint64*)(pd[i]+LEN_ZLIB_ID+1)) = (_uint64) len_old;
                         memcpy(pd[i]+LEN_ZLIB_ID+1+sizeof(_uint64), pcmp, len);
-                        //BUG: *((_uint64*)(pd[i]+LEN_ZLIB_ID+1+sizeof(_uint64))) = (_uint64) len;
+                        //BUG: *((_uint64*)(pd[i]+LEN_ZLIB_ID+1+sizeof(_uint64))) = (
+                        //          _uint64) len;
                     }
                 }
                 nb += plen[i];
@@ -1089,7 +1094,9 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                             mxSetCell(cell_array_ptr,i,vec);
                         }
                         else {
-                            mexErrMsgTxt("Unable to allocate memory for serialized output of a variable\n");
+                            mexErrMsgIdAndTxt("mYm:Serialization:MemoryAllocation",
+                                "Unable to allocate memory for serialized output of a "
+                                "variable\n");
                         }
                     }    
                     mxFree(pd);
@@ -1097,17 +1104,21 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                     plhs[0] = cell_array_ptr; 
                 }
                 else {
-                    mexErrMsgTxt("Unable to allocate cell matrix for output variables\n");
+                    mexErrMsgIdAndTxt("mYm:Serialization:CellAllocation",
+                        "Unable to allocate cell matrix for output variables\n");
                 }
             }
         }
     }
     else if (q==DESERIALIZE) {
         if ((nlhs == 1) && (nrhs == 2)) {
-            plhs[0] = deserialize((const char *) mxGetPr(prhs[1]),0) ; // the 2nd input argument is a pointer to the matlab variable containing serialized data
+            // the 2nd input argument is a pointer to the matlab variable containing 
+            // serialized data
+            plhs[0] = deserialize((const char *) mxGetPr(prhs[1]),0);
         }
         else {
-            mexErrMsgTxt("There must be only one input and one output variable\n");
+            mexErrMsgIdAndTxt("mYm:Deserialization:Mismatch",
+                "There must be only one input and one output variable\n");
         }
     }
     else if (q == VERSION) {
@@ -1885,7 +1896,7 @@ static void getSerialFct(const char* rpt, const mxArray* rparg, pfserial& rpf, b
 // entry point
 mxArray* deserialize(const char* rpSerial, const size_t rlength) {
     if (!strcasecmp(rpSerial, "dj0"))
-        mexErrMsgIdAndTxt("DataJoint:CrossPlatform:Compatibility",
+        mexErrMsgIdAndTxt("mYm:CrossPlatform:Compatibility",
                 "Blob data ingested utilizing DataJoint-Python version >=0.12 not yet supported.");
     mxArray* p_res = NULL;
     bool could_not_deserialize = true;
@@ -1972,7 +1983,7 @@ char *hex2char(char *original_val, const size_t char_length) {
             offset += 1;
         }
         else if(0xD800<=pnt[a] && pnt[a]<=0xDFFF) {
-            mexErrMsgIdAndTxt("DataJoint:Deserialization:UTF8",
+            mexErrMsgIdAndTxt("mYm:Deserialization:UTF8",
                 "Invalid block of UTF8 detected.");
         } //invalid block of utf8
         else if(pnt[a]<=0xFFFF) {
@@ -2013,7 +2024,7 @@ char *char2hex(char *original_val, const size_t vlength, const size_t char_lengt
             u1 = original_val[a+1];
             u2 = original_val[a+2];
             if (u0 == 0xED && (u1 & 0xA0) == 0xA0) {
-                mexErrMsgIdAndTxt("DataJoint:Serialization:UTF8",
+                mexErrMsgIdAndTxt("mYm:Serialization:UTF8",
                     "Invalid block of UTF8 detected.");
             }
             result_pnt[idx] = (((u0-0xE0)<<12) + ((u1-0x80)<<6) + (u2-0x80));
