@@ -1,6 +1,7 @@
 branches:
-  only:
-  - master
+  except:
+  - master-stage
+  - stage
 sudo: required
 services: 
 - docker
@@ -8,7 +9,6 @@ env:
   global:
     - DOCKER_CLIENT_TIMEOUT: 120
     - COMPOSE_HTTP_TIMEOUT: 120
-    - MATLAB_USER: datajoint
     - MATLAB_UID: 2000
     - MATLAB_GID: 2000
 slim: &slim
@@ -18,9 +18,9 @@ slim: &slim
   script:
     - license=MATLAB_LICENSE_${MATLAB_VERSION}
     - export MATLAB_LICENSE=$(eval echo "\$$license")
-    - docker-compose -f LNX-docker-compose.yml up --exit-code-from app
     - if [ "distribution/mexa64/mym.mexa64" -nt "distribution/mexmaci64/mym.mexmaci64" ]; then exit 1; fi
     - if [ "distribution/mexa64/mym.mexa64" -nt "distribution/mexw64/mym.mexw64" ]; then exit 1; fi
+    - docker-compose -f LNX-docker-compose.yml up --exit-code-from app
 jobs:
   include:
     - <<: *slim
