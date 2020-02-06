@@ -34,7 +34,7 @@
 // mym version information
 #define MYM_VERSION_MAJOR 2
 #define MYM_VERSION_MINOR 7
-#define MYM_VERSION_BUGFIX 0
+#define MYM_VERSION_BUGFIX 1
 
 
 // some local defintion
@@ -181,5 +181,7 @@ enum CMD_FLAGS {
 
 static void getSerialFct(const char* rpt, const mxArray* rparg, pfserial& rpf, bool& rpec);
 mxArray* deserialize(const char* rpSerial, const size_t rlength);
+char *hex2char(char *original_val, const size_t vlength);
+char *char2hex(char *original_val, const size_t vlength, const size_t char_length);
 
 #endif // MY_MAT_H
