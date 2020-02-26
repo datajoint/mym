@@ -37,6 +37,17 @@ classdef TestInsertFetch < tests.Prep
 
             mym(curr_conn, 'close');
         end
+        function testNullableBlob(testCase)
+            % https://github.com/datajoint/datajoint-matlab/issues/195
+            curr_conn = mym(-1, 'open', testCase.CONN_INFO.host, testCase.CONN_INFO.user, ...
+                testCase.CONN_INFO.password, 'false');
+            mym(curr_conn, 'create database `djtest_nullable`');
+            mym(['create table `djtest_nullable`.`blob_field` ' ...
+                '(id int, data longblob default null)']);
+            mym('insert into `djtest_nullable`.`blob_field` (`id`) values (0)');
+            res = mym(curr_conn, 'select * from `djtest_nullable`.`blob_field`');
+            mym(curr_conn, 'close');
+        end
     end
     methods (Static)
         function check(conn_id, mysql_datatype, dj_datatype, flag, data)
