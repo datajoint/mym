@@ -311,7 +311,7 @@ static void field2int(const char*s, enum_field_types t, unsigned int flags, void
  *  This is based on an original by Kimmo Uutela
  **********************************************************************/
 static char* getstring(const mxArray*a) {
-    int llen = mxGetM(a)*mxGetN(a)*sizeof(mxChar)+1;
+    int llen = (int)mxGetM(a) * (int)mxGetN(a) * sizeof(mxChar) + 1;
     char*c = (char*) mxCalloc(llen, sizeof(char));
     if (mxGetString(a, c, llen))
         mexErrMsgTxt("Can\'t copy string in getstring()");
@@ -337,7 +337,7 @@ static void updateplugindir() {
     char environment_string[1000];
     strcpy(environment_string,"LIBMYSQL_PLUGIN_DIR=");
     strcat(environment_string,mym_directory);
-    putenv(environment_string);
+    _putenv(environment_string);
 
     // //Confirm Path
     // printf("Path:  %s\n", mym_directory); 
