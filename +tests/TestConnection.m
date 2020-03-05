@@ -1,7 +1,7 @@
 classdef TestConnection < tests.Prep
     % TestConnection tests typical connection scenarios.
     methods (Test)
-        function testNewConnection(testCase)
+        function TestConnection_testNewConnection(testCase)
             % force new connections test
             st = dbstack;
             disp(['---------------' st(1).name '---------------']);
@@ -21,7 +21,7 @@ classdef TestConnection < tests.Prep
             mym(conn1, 'close');
             mym(conn2, 'close');
         end
-        function testReuseConnection(testCase)
+        function TestConnection_testReuseConnection(testCase)
             % reuse existing connections test
             st = dbstack;
             disp(['---------------' st(1).name '---------------']);

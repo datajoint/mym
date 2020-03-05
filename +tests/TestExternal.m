@@ -1,7 +1,7 @@
 classdef TestExternal < tests.Prep
     % TestExternal tests external storage serialization/deserialization.
     methods (Test)
-        function testArraySerialization(testCase)
+        function TestExternal_testArraySerialization(testCase)
             % array serialization test
             st = dbstack;
             disp(['---------------' st(1).name '---------------']);
@@ -19,9 +19,9 @@ classdef TestExternal < tests.Prep
                 'hello',
                 ''
             };
-            testCase.verify(testCase, array_tests);
+            testCase.TestExternal_verify(testCase, array_tests);
         end 
-        function testStructSerialization(testCase)
+        function TestExternal_testStructSerialization(testCase)
             % struct serialization test
             st = dbstack;
             disp(['---------------' st(1).name '---------------']);
@@ -39,9 +39,9 @@ classdef TestExternal < tests.Prep
                     {'now',{[4,2,8;5,5,8;3,3,8]}}, {multi}})),
                 % ,struct("sample","bye")
             };
-            testCase.verify(testCase, array_tests);
+            testCase.TestExternal_verify(testCase, array_tests);
         end
-        function testCellSerialization(testCase)
+        function TestExternal_testCellSerialization(testCase)
             % cell serialization test
             st = dbstack;
             disp(['---------------' st(1).name '---------------']);
@@ -55,11 +55,11 @@ classdef TestExternal < tests.Prep
                 {[8,5,3;4,6,7;4,8,2], {struct('lvl1',struct('lvl2',multi)), ...
                     {[4,2,8;5,5,8;3,3,8],'yes'}}, {multi}}
             };
-            testCase.verify(testCase, array_tests);
+            testCase.TestExternal_verify(testCase, array_tests);
         end
     end
     methods (Static)
-        function verify(testCase, array_tests)
+        function TestExternal_verify(testCase, array_tests)
             for i = 1 : length(array_tests)
                 % single serialization test
                 packed_cell = mym('serialize {M}', array_tests{i});

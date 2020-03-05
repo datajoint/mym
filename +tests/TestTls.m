@@ -1,7 +1,7 @@
 classdef TestTls < tests.Prep
     % TestTls tests TLS connection scenarios.
     methods (Test)
-        function testSecureConn(testCase)
+        function TestTls_testSecureConn(testCase)
             % secure connection test
             st = dbstack;
             disp(['---------------' st(1).name '---------------']);
@@ -17,7 +17,7 @@ classdef TestTls < tests.Prep
             testCase.verifyTrue(length(res.Value{1}) > 0);
             mym(curr_conn, 'close');
         end
-        function testInsecureConn(testCase)
+        function TestTls_testInsecureConn(testCase)
             % insecure connection test
             st = dbstack;
             disp(['---------------' st(1).name '---------------']);
@@ -35,7 +35,7 @@ classdef TestTls < tests.Prep
                 '');
             mym(curr_conn, 'close');
         end
-        function testPreferredConn(testCase)
+        function TestTls_testPreferredConn(testCase)
             % preferred connection test
             st = dbstack;
             disp(['---------------' st(1).name '---------------']);
@@ -63,7 +63,7 @@ classdef TestTls < tests.Prep
                 testCase.verifyTrue(length(res.Value{1}) > 0);
             end
         end
-        function testRejectException(testCase)
+        function TestTls_testRejectException(testCase)
             % test exception on require TLS
             st = dbstack;
             disp(['---------------' st(1).name '---------------']);
