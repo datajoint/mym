@@ -76,6 +76,9 @@ const bool debug = false;  //  turn on information messages
 	   you get errors on other platforms, move the declarations outside the WIN32 block */
 	inline int strcasecmp(const char *s1, const char *s2) { return strcmp(s1, s2); }
 	inline int strncasecmp(const char *s1, const char *s2, size_t n) { return strncmp(s1, s2, n); }
+	// In windows, strcasecmp and strcasestr dont do a case insensitive execution, so user must
+	// make sure that everything is case sensitive
+	inline const char * strcasestr(const char *s1, const char *s2) { return strstr(s1, s2); }
 #endif
 #include <mysql.h>  //  Definitions for MySQL client API
 
