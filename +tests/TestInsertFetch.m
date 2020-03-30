@@ -1,7 +1,7 @@
 classdef TestInsertFetch < tests.Prep
     % TestExternal tests inserting and fetching the same result.
     methods (Test)
-        function testInsertFetch(testCase)
+        function TestInsertFetch_testInsertFetch(testCase)
             % insert/fetch test.
             st = dbstack;
             disp(['---------------' st(1).name '---------------']);
@@ -9,10 +9,10 @@ classdef TestInsertFetch < tests.Prep
                 testCase.CONN_INFO.password, 'false');
             mym(curr_conn, 'create database `djtest_insert`;');
 
-            testCase.check(curr_conn, 'varchar(7)','','S','raphael');
-            testCase.check(curr_conn, 'longblob','','M',int64([1;2]));
-            testCase.check(curr_conn, 'varchar(4)','','S','ýýýý');
-            testCase.check(curr_conn, 'datetime','','S','2018-01-24 14:34:16');
+            testCase.TestInsertFetch_check(curr_conn, 'varchar(7)','','S','raphael');
+            testCase.TestInsertFetch_check(curr_conn, 'longblob','','M',int64([1;2]));
+            testCase.TestInsertFetch_check(curr_conn, 'varchar(4)','','S','ýýýý');
+            testCase.TestInsertFetch_check(curr_conn, 'datetime','','S','2018-01-24 14:34:16');
 
             data = '1d751e2e-1e74-faf8-4ab4-85fde8ef72be';
             data = strrep(data, '-', '');
@@ -22,7 +22,7 @@ classdef TestInsertFetch < tests.Prep
             hexMtx = reshapedString.';
             decMtx = hex2dec(hexMtx);
             v = uint8(decMtx)';
-            testCase.check(curr_conn, 'binary(16)','uuid','B',v);
+            testCase.TestInsertFetch_check(curr_conn, 'binary(16)','uuid','B',v);
 
             data = '1d751e2e-1e74-faf8-4ab4-85fde8ef72be';
             data = strrep(data, '-', '');
@@ -33,13 +33,24 @@ classdef TestInsertFetch < tests.Prep
             decMtx = hex2dec(hexMtx);
             v = uint8(decMtx);
             v_char = char(v)';
-            testCase.check(curr_conn, 'varchar(16)','','S',v_char);
+            testCase.TestInsertFetch_check(curr_conn, 'varchar(16)','','S',v_char);
 
+            mym(curr_conn, 'close');
+        end
+        function TestInsertFetch_testNullableBlob(testCase)
+            % https://github.com/datajoint/datajoint-matlab/issues/195
+            curr_conn = mym(-1, 'open', testCase.CONN_INFO.host, testCase.CONN_INFO.user, ...
+                testCase.CONN_INFO.password, 'false');
+            mym(curr_conn, 'create database `djtest_nullable`');
+            mym(['create table `djtest_nullable`.`blob_field` ' ...
+                '(id int, data longblob default null)']);
+            mym('insert into `djtest_nullable`.`blob_field` (`id`) values (0)');
+            res = mym(curr_conn, 'select * from `djtest_nullable`.`blob_field`');
             mym(curr_conn, 'close');
         end
     end
     methods (Static)
-        function check(conn_id, mysql_datatype, dj_datatype, flag, data)
+        function TestInsertFetch_check(conn_id, mysql_datatype, dj_datatype, flag, data)
             table_name = ['test_' strrep(mysql_datatype, '(', '')];
             table_name = strrep(table_name, ')', '');
             if dj_datatype
