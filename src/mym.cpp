@@ -1118,7 +1118,9 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         if ((nlhs == 1) && (nrhs == 2)) {
             // the 2nd input argument is a pointer to the matlab variable containing 
             // serialized data
-            plhs[0] = deserialize((const char *) mxGetPr(prhs[1]),0);
+            const mwSize* input_dims = mxGetDimensions(prhs[1]);
+            plhs[0] = deserialize((const char *) mxGetPr(prhs[1]),
+                (const size_t) std::max<size_t>(input_dims[0], input_dims[1]));
         }
         else {
             mexErrMsgIdAndTxt("mYm:Deserialization:Mismatch",
@@ -1905,9 +1907,6 @@ mxArray* deserialize(const char* rpSerial, const size_t rlength) {
     char* p_cmp = NULL;
     const char* p_serial = rpSerial;
     size_t length = rlength;
-    if (p_serial != 0 && !strcasecmp(rpSerial, "dj0"))
-        mexErrMsgIdAndTxt("mYm:CrossPlatform:Compatibility",
-                "Blob data ingested utilizing DataJoint-Python version >=0.12 not yet supported.");
     if (p_serial==0) {
         // the row is empty: return an empty array
         p_res = mxCreateNumericArray(0, 0, mxCHAR_CLASS, mxREAL);
@@ -1936,6 +1935,9 @@ mxArray* deserialize(const char* rpSerial, const size_t rlength) {
             p_serial = rpSerial;
         }
     }
+    if (p_serial != 0 && !strcasecmp(p_serial, "dj0"))
+        mexErrMsgIdAndTxt("mYm:CrossPlatform:Compatibility",
+        "Blob data ingested utilizing DataJoint-Python version >=0.12 not yet supported.");
     if (strcmp(p_serial, ID_MATLAB)==0) {
         p_serial = p_serial+LEN_ID_MATLAB+1;
         try {
