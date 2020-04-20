@@ -31,7 +31,7 @@ classdef Prep < matlab.unittest.TestCase
                 mym(curr_conn, sprintf('%s',cmd{:}));
 
                 cmd = {...
-                'GRANT ALL PRIVILEGES ON `djtest%%`.* TO ''datajoint''@''%%'';'
+                ['GRANT ALL PRIVILEGES ON `' testCase.PREFIX '%%`.* TO ''datajoint''@''%%'';']
                 };
                 mym(curr_conn, sprintf('%s',cmd{:}));
 
@@ -42,7 +42,7 @@ classdef Prep < matlab.unittest.TestCase
                 mym(curr_conn, sprintf('%s',cmd{:}));
 
                 cmd = {...
-                'GRANT SELECT ON `djtest%%`.* TO ''djview''@''%%'';'
+                ['GRANT SELECT ON `' testCase.PREFIX '%%`.* TO ''djview''@''%%'';']
                 };
                 mym(curr_conn, sprintf('%s',cmd{:}));
 
@@ -54,24 +54,24 @@ classdef Prep < matlab.unittest.TestCase
                 mym(curr_conn, sprintf('%s',cmd{:}));
 
                 cmd = {...
-                'GRANT SELECT ON `djtest%%`.* TO ''djssl''@''%%'';'
+                ['GRANT SELECT ON `' testCase.PREFIX '%%`.* TO ''djssl''@''%%'';']
                 };
                 mym(curr_conn, sprintf('%s',cmd{:}));
             else
                 cmd = {...
-                'GRANT ALL PRIVILEGES ON `djtest%%`.* TO ''datajoint''@''%%'' '
+                ['GRANT ALL PRIVILEGES ON `' testCase.PREFIX '%%`.* TO ''datajoint''@''%%'' ']
                 'IDENTIFIED BY ''datajoint'';'
                 };
                 mym(curr_conn, sprintf('%s',cmd{:}));
 
                 cmd = {...
-                'GRANT SELECT ON `djtest%%`.* TO ''djview''@''%%'' '
+                ['GRANT SELECT ON `' testCase.PREFIX '%%`.* TO ''djview''@''%%'' ']
                 'IDENTIFIED BY ''djview'';'
                 };
                 mym(curr_conn, sprintf('%s',cmd{:}));
 
                 cmd = {...
-                'GRANT SELECT ON `djtest%%`.* TO ''djssl''@''%%'' '
+                ['GRANT SELECT ON `' testCase.PREFIX '%%`.* TO ''djssl''@''%%'' ']
                 'IDENTIFIED BY ''djssl'' '
                 'REQUIRE SSL;'
                 };

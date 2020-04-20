@@ -57,6 +57,33 @@ classdef TestExternal < tests.Prep
             };
             testCase.TestExternal_verify(testCase, array_tests);
         end
+        function TestExternal_testdj0Error(testCase)
+            st = dbstack;
+            disp(['---------------' st(1).name '---------------']);
+            % https://github.com/datajoint/mym/issues/43
+            % normal dj0
+            % python: pack([1,2,3]).hex().upper()
+            value = ['646A300002030000000000000004000000000000000A010001040000000000000' ...
+                '00A01000204000000000000000A010003'];
+            hexstring = value';
+            reshapedString = reshape(hexstring,2,length(value)/2);
+            hexMtx = reshapedString.';
+            decMtx = hex2dec(hexMtx);
+            packed = uint8(decMtx);
+            unpacked = testCase.verifyError(@() mym('deserialize', packed), ...
+                'mYm:CrossPlatform:Compatibility');
+            % compressed dj0
+            % python: pack([1,2,3]*28).hex().upper()
+            value = ['5A4C31323300FD03000000000000789C4BC93260600A6180001628CDC5C8C088C4' ...
+                '664262338FAA195533AA6678A80100444706E9'];
+            hexstring = value';
+            reshapedString = reshape(hexstring,2,length(value)/2);
+            hexMtx = reshapedString.';
+            decMtx = hex2dec(hexMtx);
+            packed = uint8(decMtx);
+            unpacked = testCase.verifyError(@() mym('deserialize', packed), ...
+                'mYm:CrossPlatform:Compatibility');
+        end
     end
     methods (Static)
         function TestExternal_verify(testCase, array_tests)
