@@ -1353,7 +1353,7 @@ char* serializeString(size_t &rnBytes, const mxArray*rpArray, const char*rpArg, 
     const mwSize n_dims = mxGetNumberOfDimensions(rpArray);
     char* p_buf = NULL;
     if (mxIsEmpty(rpArray)) {
-        p_buf = '\0';
+        p_buf = (char*) '\0';
         rnBytes = 0;
     }
     else if (mxIsChar(rpArray)) {
