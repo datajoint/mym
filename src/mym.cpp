@@ -1526,10 +1526,8 @@ char* serializeString(size_t &rnBytes, const mxArray*rpArray, const char*rpArg, 
     const mwSize n_dims = mxGetNumberOfDimensions(rpArray);
     char* p_buf = NULL;
     if (mxIsEmpty(rpArray)) {
-        p_buf = (char*)mxCalloc(2, sizeof(char));
-        p_buf[0] = ' ';
-        p_buf[1] = 0;
-        rnBytes = 1;
+        p_buf = (char*) '\0';
+        rnBytes = 0;
     }
     else if (mxIsChar(rpArray)) {
         if ((n_dims!=2) || !((pdims[0]==1) || (pdims[1]==1)))
@@ -1937,7 +1935,7 @@ mxArray* deserialize(const char* rpSerial, const size_t rlength) {
     }
     if (p_serial != 0 && !strcasecmp(p_serial, "dj0"))
         mexErrMsgIdAndTxt("mYm:CrossPlatform:Compatibility",
-        "Blob data ingested utilizing DataJoint-Python version >=0.12 not yet supported.");
+            "Blob data ingested utilizing DataJoint-Python version >=0.12 not yet supported.");
     if (strcmp(p_serial, ID_MATLAB)==0) {
         p_serial = p_serial+LEN_ID_MATLAB+1;
         try {
