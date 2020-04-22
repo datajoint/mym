@@ -50,6 +50,20 @@ classdef TestInsertFetch < tests.Prep
             res = mym(curr_conn, ['select * from `' testCase.PREFIX '_nullable`.`blob_field`']);
             mym(curr_conn, 'close');
         end
+        function TestInsertFetch_testString(testCase)
+            % https://github.com/datajoint/mym/issues/47
+            curr_conn = mym(-1, 'open', testCase.CONN_INFO.host, testCase.CONN_INFO.user, ...
+                testCase.CONN_INFO.password, 'false');
+            mym(curr_conn, ['create database `' testCase.PREFIX '_string`']);
+            mym(['create table `' testCase.PREFIX '_string`.`various` ' ...
+                '(id int, data varchar(30) default null)']);
+            mym(['insert into `' testCase.PREFIX '_string`.`various` (`id`, `data`) ' ...
+                'values (0, "{S}")'], '');
+            res = mym(curr_conn, ['select length(data) as len from `' testCase.PREFIX ...
+                '_string`.`various`']);
+            testCase.verifyEqual(double(res.len), 0);
+            mym(curr_conn, 'close');
+        end
         function TestInsertFetch_testdj0Error(testCase)
             % https://github.com/datajoint/mym/issues/43
             curr_conn = mym(-1, 'open', testCase.CONN_INFO.host, testCase.CONN_INFO.user, ...
