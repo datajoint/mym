@@ -10,6 +10,7 @@ classdef TestInsertFetch < tests.Prep
             mym(curr_conn, ['create database `' testCase.PREFIX  '_insert`;']);
 
             testCase.TestInsertFetch_check(testCase, curr_conn, 'varchar(7)','','S','raphael');
+            testCase.TestInsertFetch_check(testCase, curr_conn, 'varchar(32)','','S','lteachen');
             testCase.TestInsertFetch_check(testCase, curr_conn, 'longblob','','M', ...
                 int64([1;2]));
             testCase.TestInsertFetch_check(testCase, curr_conn, 'varchar(4)','','S','ýýýý');
