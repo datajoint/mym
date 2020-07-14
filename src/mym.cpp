@@ -1535,7 +1535,7 @@ char* serializeString(size_t &rnBytes, const mxArray*rpArray, const char*rpArg, 
         // matlab string
         p_buf = (char*)mxCalloc(length+1, sizeof(char));
         p_buf = mxArrayToString(rpArray);
-        mexPrintf("DEBUG: The length of the string is %d characters.\n", length + 1);
+        mexPrintf("DEBUG: The length of `%s` string is `%d` characters.\n", p_buf, length + 1);
         p_buf = char2hex(p_buf, strlen(p_buf), length + 1);
         rnBytes = length;
     }
