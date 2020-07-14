@@ -9,8 +9,11 @@ classdef TestInsertFetch < tests.Prep
                 testCase.CONN_INFO.password, 'false');
             mym(curr_conn, ['create database `' testCase.PREFIX  '_insert`;']);
 
+            % test random string
             testCase.TestInsertFetch_check(testCase, curr_conn, 'varchar(7)','','S','raphael');
-            testCase.TestInsertFetch_check(testCase, curr_conn, 'varchar(32)','','S','lteachen');
+            % test 8-byte ASCII string
+            testCase.TestInsertFetch_check(testCase, curr_conn, 'varchar(32)','','S', ...
+                'lteachen');
             testCase.TestInsertFetch_check(testCase, curr_conn, 'longblob','','M', ...
                 int64([1;2]));
             testCase.TestInsertFetch_check(testCase, curr_conn, 'varchar(4)','','S','ýýýý');
