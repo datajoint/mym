@@ -1535,7 +1535,7 @@ char* serializeString(size_t &rnBytes, const mxArray*rpArray, const char*rpArg, 
         // matlab string
         p_buf = (char*)mxCalloc(length+1, sizeof(char));
         p_buf = mxArrayToString(rpArray);
-        p_buf = char2hex(p_buf, strlen(p_buf), length);
+        p_buf = char2hex(p_buf, strlen(p_buf), length + 1);
         rnBytes = length;
     }
     else if (mxIsNumeric(rpArray)||mxIsLogical(rpArray)) {
