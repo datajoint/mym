@@ -16,11 +16,12 @@ services:
     #   - ./mysql/data:/var/lib/mysql
   fakeservices.datajoint.io:
     <<: *net
-    image: raphaelguzman/nginx:v0.0.3
+    image: raphaelguzman/nginx:v0.0.8
     environment:
     - ADD_db_TYPE=DATABASE
     - ADD_db_ENDPOINT=db:3306
     ports:
+      - "80:80"
       - "443:443"
       - "3306:3306"
     depends_on:

@@ -34,7 +34,7 @@
 // mym version information
 #define MYM_VERSION_MAJOR 2
 #define MYM_VERSION_MINOR 8
-#define MYM_VERSION_BUGFIX 1
+#define MYM_VERSION_BUGFIX 2
 
 
 // some local defintion

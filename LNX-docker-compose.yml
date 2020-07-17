@@ -11,7 +11,7 @@ services:
       - MYSQL_ROOT_PASSWORD=simple
   fakeservices.datajoint.io:
     <<: *net
-    image: raphaelguzman/nginx:v0.0.3
+    image: raphaelguzman/nginx:v0.0.8
     environment:
     - ADD_db_TYPE=DATABASE
     - ADD_db_ENDPOINT=db:3306
