@@ -70,8 +70,11 @@ classdef TestExternal < tests.Prep
             hexMtx = reshapedString.';
             decMtx = hex2dec(hexMtx);
             packed = uint8(decMtx);
-            unpacked = testCase.verifyError(@() mym('deserialize', packed), ...
-                'mYm:CrossPlatform:Compatibility');
+            try
+                unpacked = mym('deserialize', packed);
+            catch ME
+                testCase.verifyEqual(ME.identifier, 'mYm:CrossPlatform:Compatibility');
+            end
             % compressed dj0
             % python: pack([1,2,3]*28).hex().upper()
             value = ['5A4C31323300FD03000000000000789C4BC93260600A6180001628CDC5C8C088C4' ...
@@ -81,8 +84,11 @@ classdef TestExternal < tests.Prep
             hexMtx = reshapedString.';
             decMtx = hex2dec(hexMtx);
             packed = uint8(decMtx);
-            unpacked = testCase.verifyError(@() mym('deserialize', packed), ...
-                'mYm:CrossPlatform:Compatibility');
+            try
+                unpacked = mym('deserialize', packed);
+            catch ME
+                testCase.verifyEqual(ME.identifier, 'mYm:CrossPlatform:Compatibility');
+            end
         end
     end
     methods (Static)

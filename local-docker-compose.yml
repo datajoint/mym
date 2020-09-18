@@ -1,4 +1,4 @@
-# docker-compose -f local-docker-compose.yml up
+# docker-compose -f local-docker-compose.yml --env-file LNX.env up
 version: '2.4'
 x-net: &net
   networks:
@@ -48,17 +48,42 @@ services:
       - "8888:8888"
     user: ${MATLAB_UID}:${MATLAB_GID}
     working_dir: /src
-    command: > 
-      /bin/bash -c "
-        ## Set mym path
-        matlab -nodisplay -r \"\
-            run('mex_compilation/compile_linux');\
-            addpath('./distribution/mexa64');\
-            savepath;\
-          \";
+    command:
+      - /bin/bash
+      - -c
+      - |
+        # Compile mym, package into toolbox, and install
+        matlab -nodisplay -r "
+          run('mex_compilation/compile_linux');\
+          websave([tempdir 'GHToolbox.mltbx'],\
+                  ['https://github.com/datajoint/GHToolbox' \
+                   '/releases/download/' subsref(webread(['https://api.github.com/repos' \
+                                                          '/datajoint/GHToolbox' \
+                                                          '/releases/latest']),\
+                                                 substruct('.', 'tag_name')) \
+                   '/GHToolbox.mltbx']);\
+          matlab.addons.toolbox.installToolbox([tempdir 'GHToolbox.mltbx']);\
+          oldpath = addpath('distribution/mexa64');\
+          docs = help('mym');\
+          path(oldpath);\
+          ghtb.package('mym',\
+                       'Raphael Guzman',\
+                       'raphael.h.guzman@gmail.com',\
+                       ['MySQL API for MATLAB with support for BLOB objects'],\
+                       docs,\
+                       {'mexa64/libmysqlclient.so.18.4.'},\
+                       @() strjoin(arrayfun(@(x) num2str(x),\
+                                            cell2mat(struct2cell(mym('version'))),\
+                                            'uni', false),\
+                                   '.'),\
+                       {'distribution/mexa64', 'distribution/mexmaci64',\
+                        'distribution/mexw64'},\
+                       'toolboxVersionDir', 'distribution/mexa64',\
+                       'toolboxRootDir', 'distribution');\
+          ghtb.install('mym.mltbx');\
+        "
         ## Interactive Jupyter Notebook environment
-        jupyter notebook;
-      "
+        jupyter notebook
     mac_address: $MATLAB_HOSTID
     volumes:
       ## Dev mounts

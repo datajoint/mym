@@ -109,6 +109,10 @@
 % 'minor' and 'bugfix' is returned. These fields contain numeric
 % scalars corresponding to the version major.minor.bugfix
 %
+% SOURCE
+% -------
+% https://github.com/datajoint/mym
+%
 % HISTORY
 % -------
 % v1.36   - fixed bug for Linux64 related to cross-platform compatibility. Blobs written on windows can be read under 

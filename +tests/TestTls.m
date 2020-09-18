@@ -8,7 +8,7 @@ classdef TestTls < tests.Prep
             curr_conn = mym(-1, 'open', testCase.CONN_INFO.host, testCase.CONN_INFO.user, ...
                 testCase.CONN_INFO.password, 'true');
 
-            connections = evalc("mym('status')");
+            connections = evalc('mym(''status'')');
             connections = splitlines(connections);
             connections(end)=[];
             testCase.verifyTrue(contains(connections{curr_conn+1},'encrypted'));
@@ -24,7 +24,7 @@ classdef TestTls < tests.Prep
             curr_conn = mym(-1, 'open', testCase.CONN_INFO.host, testCase.CONN_INFO.user, ...
                 testCase.CONN_INFO.password, 'false');
 
-            connections = evalc("mym('status')");
+            connections = evalc('mym(''status'')');
             connections = splitlines(connections);
             connections(end)=[];
             testCase.verifyTrue(~contains(connections{curr_conn+1},'encrypted'));
@@ -54,7 +54,7 @@ classdef TestTls < tests.Prep
             end
 
             function conn_id = check(conn_id)
-                connections = evalc("mym('status')");
+                connections = evalc('mym(''status'')');
                 connections = splitlines(connections);
                 connections(end)=[];
                 testCase.verifyTrue(contains(connections{conn_id+1},'encrypted'));
@@ -72,11 +72,10 @@ classdef TestTls < tests.Prep
                     'djssl', 'djssl', 'false');
                 testCase.verifyTrue(false);
                 mym(curr_conn, 'close');
-            catch
-                e = lasterror;
-                testCase.verifyEqual(e.identifier, 'MySQL:Error');
-                testCase.verifyTrue(contains(e.message,...
-                    ["requires secure connection","Access denied"])); %MySQL8,MySQL5
+            catch ME
+                testCase.verifyEqual(ME.identifier, 'MySQL:Error');
+                testCase.verifyTrue(contains(ME.message,'requires secure connection') || ...
+                                    contains(ME.message,'Access denied')); %MySQL8 or MySQL5
             end
         end
     end
