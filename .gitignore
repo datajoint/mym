@@ -8,3 +8,4 @@ win.*
 .DS_Store
 macos.*
 package.prj
+matlab.prf

@@ -71,19 +71,25 @@ services:
                        'raphael.h.guzman@gmail.com',\
                        ['MySQL API for MATLAB with support for BLOB objects'],\
                        docs,\
-                       {'mexa64/libmysqlclient.so.18.4.'},\
+                       {'.vscode', '.git', '.gitignore', 'build', 'lib', 'maria-plugin',\
+                        'mex_compilation', 'mysql-connector', 'notebook', 'src', 'zlib',\
+                        '*docker-compose.yml', '*.txt', '*.env', '*.prf', '*.md',\
+                        'distribution/mexa64/libmysqlclient.so.18.4.'},\
                        @() strjoin(arrayfun(@(x) num2str(x),\
                                             cell2mat(struct2cell(mym('version'))),\
                                             'uni', false),\
                                    '.'),\
                        {'distribution/mexa64', 'distribution/mexmaci64',\
-                        'distribution/mexw64'},\
+                        'distribution/mexw64', 'mym.m'},\
                        'toolboxVersionDir', 'distribution/mexa64',\
-                       'toolboxRootDir', 'distribution');\
-          ghtb.install('mym.mltbx');\
+                       'toolboxRootDir', '.');\
+          matlab.addons.toolbox.installToolbox('mym.mltbx');\
+          cd('/tmp');\
           mym('version');\
         "
-        ## Interactive Jupyter Notebook environment
+        # Copy preferences
+        cp /tmp/matlab.prf /home/muser/.matlab/${MATLAB_VERSION}/matlab.prf
+        # Interactive Jupyter Notebook environment
         jupyter notebook
     mac_address: $MATLAB_HOSTID
     volumes:
@@ -92,5 +98,6 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       ## Additional mounts may go here
       # - ./notebook:/home/muser/notebooks
+      - ./matlab.prf:/tmp/matlab.prf
 networks:
   main:
