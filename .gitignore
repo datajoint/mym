@@ -1,4 +1,11 @@
 mym.o
-build/*
-LNX-docker-compose.yml
+build
+docker-compose.yml
 *.env
+notebook
+.vscode
+win.*
+.DS_Store
+macos*
+package.prj
+matlab.prf

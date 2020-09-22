@@ -38,5 +38,6 @@ mex( ...
 
 % Pack mex with all dependencies into distribution directory
 copyfile(['mym.' mexext()], distrib_out);
+copyfile(fullfile(mym_src, 'mym.m'), distrib_out);
 copyfile(fullfile(mysql_lib, '*.dll'), distrib_out);
 copyfile(fullfile(mariadb_lib, 'dialog.dll'), distrib_out);
