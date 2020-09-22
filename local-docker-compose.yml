@@ -85,7 +85,7 @@ services:
                        'toolboxVersionDir', 'distribution/mexa64',\
                        'toolboxRootDir', '.');\
           matlab.addons.toolbox.installToolbox('mym.mltbx');\
-          cd('/tmp');\
+          cd(tempdir);\
           mym('version');\
         "
         # Copy preferences
