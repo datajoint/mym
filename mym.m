@@ -29,7 +29,7 @@ function varargout = mym(varargin)
             fprintf(fid, '\n%s\n',['addpath(''' mymPath ''');']);
             fclose(fid);
         end
-    else if exist(pathfile, 'file') == 0
+    elseif exist(pathfile, 'file') == 0
         fid = fopen(pathfile, 'a+');
         fprintf(fid, '\n%s\n',['addpath(''' mymPath ''');']);
         fclose(fid);
