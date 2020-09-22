@@ -63,9 +63,10 @@ services:
                                                  substruct('.', 'tag_name')) \
                    '/GHToolbox.mltbx']);\
           matlab.addons.toolbox.installToolbox([tempdir 'GHToolbox.mltbx']);\
-          oldpath = addpath('distribution/mexa64');\
+          origDir = pwd;\
+          cd('distribution/mexa64');\
           docs = help('mym');\
-          path(oldpath);\
+          cd(origDir);\
           ghtb.package('mym',\
                        'Raphael Guzman',\
                        'raphael.h.guzman@gmail.com',\
