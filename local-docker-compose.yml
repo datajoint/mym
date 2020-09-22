@@ -56,7 +56,6 @@ services:
         cd /src
         # Compile mym, package into toolbox, and install
         matlab -nodisplay -r "
-          run('mex_compilation/compile_linux');\
           websave([tempdir 'GHToolbox.mltbx'],\
                   ['https://github.com/datajoint/GHToolbox' \
                    '/releases/download/' subsref(webread(['https://api.github.com/repos' \
@@ -65,6 +64,7 @@ services:
                                                  substruct('.', 'tag_name')) \
                    '/GHToolbox.mltbx']);\
           matlab.addons.toolbox.installToolbox([tempdir 'GHToolbox.mltbx']);\
+          run('mex_compilation/compile_linux');\
           origDir = pwd;\
           cd('distribution/mexa64');\
           docs = help('mym');\
@@ -87,6 +87,8 @@ services:
                        'toolboxVersionDir', 'distribution/mexa64',\
                        'toolboxRootDir', '.');\
           matlab.addons.toolbox.installToolbox('mym.mltbx');\
+          cd(tempdir);\
+          disp(mym('version'));\
         "
         cd "$${ORIG_DIR}"
         # Copy preferences
