@@ -47,11 +47,13 @@ services:
     ports:
       - "8888:8888"
     user: ${MATLAB_UID}:${MATLAB_GID}
-    working_dir: /src
+    working_dir: /home/muser/notebooks
     command:
       - /bin/bash
       - -c
       - |
+        ORIG_DIR=$$(pwd)
+        cd /src
         # Compile mym, package into toolbox, and install
         matlab -nodisplay -r "
           run('mex_compilation/compile_linux');\
@@ -85,9 +87,8 @@ services:
                        'toolboxVersionDir', 'distribution/mexa64',\
                        'toolboxRootDir', '.');\
           matlab.addons.toolbox.installToolbox('mym.mltbx');\
-          cd(tempdir);\
-          mym('version');\
         "
+        cd "$${ORIG_DIR}"
         # Copy preferences
         cp /tmp/matlab.prf /home/muser/.matlab/${MATLAB_VERSION}/matlab.prf
         # Interactive Jupyter Notebook environment
