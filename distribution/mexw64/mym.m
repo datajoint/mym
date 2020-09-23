@@ -9,15 +9,30 @@
 %
 % INSTALLATION
 % ------------
-% There are 2 recommended ways of installing mym:
-%   1. (Preferred) Using the 'GHToolbox' FileExchange Community Toolbox pointing to GitHub
-%                  source i.e. target='datajoint/mym'.
-%   2. Installing via MATLAB GUI: Add-Ons -> Get Add-Ons. User will need to manually 'addpath'
-%      to binary depending on the OS. See below (you may safely omit 'code' level if you have
-%      MATLAB version greater than R2016b):
-%           WIN64:   [MATLAB Add-Ons Root]/Toolboxes/mym(/code)/mexw64
-%           MACOS64: [MATLAB Add-Ons Root]/Toolboxes/mym(/code)/mexmaci64
-%           LNX64:   [MATLAB Add-Ons Root]/Toolboxes/mym(/code)/mexa64
+% (Recommended) Using GHToolbox (FileExchange Community Toolbox):
+%   1. Install *GHToolbox* using using an appropriate method in
+%        https://github.com/datajoint/GHToolbox
+%   2. run: `ghtb.install('datajoint/mym')`
+%
+% Greater than R2016b:
+%   1. Utilize MATLAB built-in GUI i.e. *Top Ribbon -> Add-Ons -> Get Add-Ons*
+%   2. Search and Select `mym`
+%   3. Select *Add from GitHub*
+%
+% Less than R2016b:
+%   1. Utilize MATLAB built-in GUI i.e. *Top Ribbon -> Add-Ons -> Get Add-Ons*
+%   2. Search and Select `mym`
+%   3. Select *Download from GitHub*
+%   4. Save `mym.mltbx` locally
+%   5. Navigate in MATLAB tree browser to saved toolbox file
+%   6. Right-Click and Select *Install*
+%   7. Select *Install*
+%
+% From Source:
+%   1. Download `mym.mltbx` locally
+%   2. Navigate in MATLAB tree browser to saved toolbox file
+%   3. Right-Click and Select *Install*
+%   4. Select *Install*
 %
 % mym() or mym
 % ------------
