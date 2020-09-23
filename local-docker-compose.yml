@@ -53,6 +53,7 @@ services:
       - -c
       - |
         ORIG_DIR=$$(pwd)
+        mkdir ~/Documents
         cd /src
         # Compile mym, package into toolbox, and install
         matlab -nodisplay -r "
