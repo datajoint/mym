@@ -25,8 +25,9 @@ function varargout = mym(varargin)
         f = fread(fid, '*char')';
         fclose(fid);
         if ~contains(f, ['addpath(''' mymPath ''');'])
-            fid = fopen(pathfile, 'a+');
-            fprintf(fid, '\n%s\n',['addpath(''' mymPath ''');']);
+            f = [['addpath(''' mymPath ''');'] newline f];
+            fid = fopen(pathfile, 'w');
+            fprintf(fid, '%s', f);
             fclose(fid);
         end
     elseif exist(pathfile, 'file') == 0
