@@ -7,5 +7,5 @@ notebook
 win.*
 .DS_Store
 macos*
-package.prj
+*.prj
 matlab.prf
