@@ -10,7 +10,7 @@ function varargout = mym(varargin)
     % add to mex-path as appropriate (persist)
     toolboxName = 'mym';
     s = settings;
-    if verLessThan('matlab', '9.2')
+    if verLessThan('matlab', '9.5')
         toolboxRoot = [strrep(s.matlab.addons.InstallationFolder.ActiveValue, '\', '/') ...
                        '/Toolboxes/' toolboxName '/code'];
     else

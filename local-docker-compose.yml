@@ -92,9 +92,9 @@ services:
           disp(mym('version'));\
         "
         cd "$${ORIG_DIR}"
-        # Copy preferences
-        cp /tmp/matlab.prf /home/muser/.matlab/${MATLAB_VERSION}/matlab.prf
-        # Interactive Jupyter Notebook environment
+        ## Copy preferences
+        # cp /tmp/matlab.prf /home/muser/.matlab/${MATLAB_VERSION}/matlab.prf
+        ## Interactive Jupyter Notebook environment
         jupyter notebook
     mac_address: $MATLAB_HOSTID
     volumes:
@@ -103,6 +103,6 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       ## Additional mounts may go here
       # - ./notebook:/home/muser/notebooks
-      - ./matlab.prf:/tmp/matlab.prf
+      # - ./matlab.prf:/tmp/matlab.prf
 networks:
   main:
