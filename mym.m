@@ -1,6 +1,6 @@
 % setupMYM (invoked only first time to set path and removes itself)
 function varargout = mym(varargin)
-    warning('mYm:Setup:FirstInvokation', 'Setting mym to path as first invokation.');
+    warning('mYm:Setup:FirstInvocation', 'Setting mym to path as first invocation.');
     % determine state
     origDir = pwd;
     ext = dbstack;
