@@ -1,3 +1,5 @@
+[![View mym on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/81208-mym)
+
 ## mym
 
 MySQL API for MATLAB with support for BLOB objects
