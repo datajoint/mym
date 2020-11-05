@@ -1,4 +1,4 @@
-classdef TestInsertFetch < tests.Prep
+classdef TestInsertFetch < Prep
     % TestExternal tests inserting and fetching the same result.
     methods (Test)
         function TestInsertFetch_testInsertFetch(testCase)
