@@ -9,3 +9,4 @@ win.*
 macos*
 *.prj
 matlab.prf
+*.mltbx

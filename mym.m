@@ -1,6 +1,6 @@
 % setupMYM (invoked only first time to set path and removes itself)
 function varargout = mym(varargin)
-    warning('mYm:Setup:FirstInvokation', 'Setting mym to path as first invokation.');
+    warning('mYm:Setup:FirstInvocation', 'Setting mym to path as first invocation.');
     % determine state
     origDir = pwd;
     ext = dbstack;
@@ -10,7 +10,7 @@ function varargout = mym(varargin)
     % add to mex-path as appropriate (persist)
     toolboxName = 'mym';
     s = settings;
-    if verLessThan('matlab', '9.2')
+    if verLessThan('matlab', '9.5')
         toolboxRoot = [strrep(s.matlab.addons.InstallationFolder.ActiveValue, '\', '/') ...
                        '/Toolboxes/' toolboxName '/code'];
     else
