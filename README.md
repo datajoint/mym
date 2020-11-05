@@ -12,9 +12,7 @@ work of Robert Almgren from University of Toronto [sourceforge project](http://s
 
 See mym.m for further documentation.
 
-Running Tests Locally
-=====================
-
+## Running Tests Locally
 
 * Create an `.env` with desired development environment values e.g.
 ``` sh
@@ -33,32 +31,28 @@ MYSQL_TAG=5.7
 
 | Use Case                     | MATLAB Code                                                                    |
 | ---------------------------- | ------------------------------------------------------------------------------ |
-| Run all tests                | `run(tests.Main)`                                                              |
-| Run one class of tests       | `run(tests.TestTls)`                                                           |
-| Run one specific test        | `runtests('tests.TestTls/TestTls_testInsecureConn')`                                   |
-| Run tests based on test name | `import matlab.unittest.TestSuite;`<br>`import matlab.unittest.selectors.HasName;`<br>`import matlab.unittest.constraints.ContainsSubstring;`<br>`suite = TestSuite.fromClass(?tests.Main, ... `<br><code>&nbsp;&nbsp;&nbsp;&nbsp;</code>`HasName(ContainsSubstring('Conn')));`<br>`run(suite)`|
+| Run all tests                | `run(Main)`                                                              |
+| Run one class of tests       | `run(TestTls)`                                                           |
+| Run one specific test        | `runtests('TestTls/TestTls_testInsecureConn')`                                   |
+| Run tests based on test name | `import matlab.unittest.TestSuite;`<br>`import matlab.unittest.selectors.HasName;`<br>`import matlab.unittest.constraints.ContainsSubstring;`<br>`suite = TestSuite.fromClass(?Main, ... `<br><code>&nbsp;&nbsp;&nbsp;&nbsp;</code>`HasName(ContainsSubstring('Conn')));`<br>`run(suite)`|
 
 
-Launch Jupyter Notebook
------------------------
+### Launch Jupyter Notebook
 * Navigate to `localhost:8888`
 * Input Jupyter password
 * Launch a notebook i.e. `New > MATLAB`
 
 
-Launch MATLAB GUI (supports remote interactive debugger)
---------------------------------------------------------
+### Launch MATLAB GUI (supports remote interactive debugger)
 * Shell into `mym_app_1` i.e. `docker exec -it mym_app_1 bash`
 * Launch Matlab by runnning command `matlab`
 
 
-Launch MATLAB Terminal
-----------------------
+### Launch MATLAB Terminal
 * Shell into `mym_app_1` i.e. `docker exec -it mym_app_1 bash`
 * Launch Matlab with no GUI by runnning command `matlab -nodisplay`
 
 
-=======
 ## Installation
 
 ### (Recommended) Using GHToolbox (FileExchange Community Toolbox)

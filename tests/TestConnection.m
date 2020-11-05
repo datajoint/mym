@@ -1,4 +1,4 @@
-classdef TestConnection < tests.Prep
+classdef TestConnection < Prep
     % TestConnection tests typical connection scenarios.
     methods (Test)
         function TestConnection_testNewConnection(testCase)
@@ -13,7 +13,7 @@ classdef TestConnection < tests.Prep
                 testCase.CONN_INFO.user, testCase.CONN_INFO.password, ...
                 'false');
 
-            connections = evalc("mym('status')");
+            connections = evalc('mym(''status'')');
             connections = splitlines(connections);
             connections(end)=[];
 
@@ -33,7 +33,7 @@ classdef TestConnection < tests.Prep
                 testCase.CONN_INFO.user, testCase.CONN_INFO.password, ...
                 'false');
 
-            connections = evalc("mym('status')");
+            connections = evalc('mym(''status'')');
             connections = splitlines(connections);
             connections(end)=[];
 

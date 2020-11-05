@@ -94,7 +94,7 @@ function [result, why] = structeq(struct1, struct2, funh2string, ignorenan)
         return
     end
     % Check field names
-    result = tests.lib.celleq(fields1,fields2);
+    result = lib.celleq(fields1,fields2);
     result = all(result);
     if ~result
         why = struct('Reason','Field names are different','Where','');
@@ -103,7 +103,7 @@ function [result, why] = structeq(struct1, struct2, funh2string, ignorenan)
     for i = 1:numel(struct1)
         props1 = struct2cell(struct1(i));
         props2 = struct2cell(struct2(i));
-        [result, subwhy] = tests.lib.celleq(props1,props2,funh2string,ignorenan);
+        [result, subwhy] = lib.celleq(props1,props2,funh2string,ignorenan);
         result = all(result);
         if ~result
     
