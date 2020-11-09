@@ -43,6 +43,15 @@ services:
         export ORIG_DIR=$$(pwd)
         mkdir ~/Documents
         cd /src
+        # Verify all mex have been updated
+        if [ "distribution/mexa64/mym.mexa64" -nt "distribution/mexmaci64/mym.mexmaci64" ]; then
+          echo "MACOS64 Mex binary appears outdated. Failing check..."
+          exit 1
+        fi
+        if [ "distribution/mexa64/mym.mexa64" -nt "distribution/mexw64/mym.mexw64" ]; then
+          echo "WIN64 Mex binary appears outdated. Failing check..."
+          exit 1
+        fi
         # Compile mym, package into toolbox, and install
         matlab -nodisplay -r "
           try\
@@ -65,7 +74,7 @@ services:
                          docs,\
                          {'.vscode', '.git', '.gitignore', 'build', 'lib', 'maria-plugin',\
                           'mex_compilation', 'mysql-connector', 'notebook', 'src', 'zlib',\
-                          '*.txt', '*.env', '*.prf', '*.md', '*.yml', 'tests',\
+                          '*.txt', '*.env', '*.prf', '*.md', '*.yml', 'tests', '.github',\
                           'distribution/mexa64/libmysqlclient.so.18.4.'},\
                          @() strjoin(arrayfun(@(x) num2str(x),\
                                               cell2mat(struct2cell(mym('version'))),\
