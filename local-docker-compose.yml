@@ -77,7 +77,7 @@ services:
                        docs,\
                        {'.vscode', '.git', '.gitignore', 'build', 'lib', 'maria-plugin',\
                         'mex_compilation', 'mysql-connector', 'notebook', 'src', 'zlib',\
-                        '*.txt', '*.env', '*.prf', '*.md', '*.yml', 'tests',\
+                        '*.txt', '*.env', '*.prf', '*.md', '*.yml', 'tests', '.github',\
                         'distribution/mexa64/libmysqlclient.so.18.4.'},\
                        @() strjoin(arrayfun(@(x) num2str(x),\
                                             cell2mat(struct2cell(mym('version'))),\
