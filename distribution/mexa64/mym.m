@@ -6,6 +6,34 @@
 %
 % If no output arguments are given, then display results. Otherwise returns
 % requested data silently.
+%
+% INSTALLATION
+% ------------
+% (Recommended) Using GHToolbox (FileExchange Community Toolbox):
+%   1. Install *GHToolbox* using using an appropriate method in
+%        https://github.com/datajoint/GHToolbox
+%   2. run: `ghtb.install('datajoint/mym')`
+%
+% Greater than R2016b:
+%   1. Utilize MATLAB built-in GUI i.e. *Top Ribbon -> Add-Ons -> Get Add-Ons*
+%   2. Search and Select `mym`
+%   3. Select *Add from GitHub*
+%
+% Less than R2016b:
+%   1. Utilize MATLAB built-in GUI i.e. *Top Ribbon -> Add-Ons -> Get Add-Ons*
+%   2. Search and Select `mym`
+%   3. Select *Download from GitHub*
+%   4. Save `mym.mltbx` locally
+%   5. Navigate in MATLAB tree browser to saved toolbox file
+%   6. Right-Click and Select *Install*
+%   7. Select *Install*
+%
+% From Source:
+%   1. Download `mym.mltbx` locally
+%   2. Navigate in MATLAB tree browser to saved toolbox file
+%   3. Right-Click and Select *Install*
+%   4. Select *Install*
+%
 % mym() or mym
 % ------------
 %   shows status of all open connections (returns nothing).
@@ -96,18 +124,25 @@
 %            as the "abc{dfg}h" is mistaken for a mYm command. A possible
 %            solution is to use the following command:
 %             mym(INSERT INTO tbl(id,txt) VALUES(1000,"{S}")','abc{dfg}h');
+%
 % mym('serialize {placeholder1}, ...',matlab_variable1, ...)
 % -------------
 %   Return : cell array of vectors of type ubyte, a vector per matlab variable 
+%
 % mym('deserialize', serialized_input)
 % -------------
 %   Return : matlab variable of the appropriate type 
+%
 % mym('version')
 % --------------
 % Displays the version of mym when no output arguments are given.
 % With a single output argument, a struct with the fields 'major',
 % 'minor' and 'bugfix' is returned. These fields contain numeric
 % scalars corresponding to the version major.minor.bugfix
+%
+% SOURCE
+% ------
+% https://github.com/datajoint/mym
 %
 % HISTORY
 % -------

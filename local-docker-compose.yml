@@ -1,4 +1,4 @@
-# docker-compose -f local-docker-compose.yml up
+# docker-compose -f local-docker-compose.yml --env-file LNX.env up
 version: '2.4'
 x-net: &net
   networks:
@@ -16,7 +16,7 @@ services:
     #   - ./mysql/data:/var/lib/mysql
   fakeservices.datajoint.io:
     <<: *net
-    image: raphaelguzman/nginx:v0.0.8
+    image: raphaelguzman/nginx:v0.0.10
     environment:
     - ADD_db_TYPE=DATABASE
     - ADD_db_ENDPOINT=db:3306
@@ -47,18 +47,57 @@ services:
     ports:
       - "8888:8888"
     user: ${MATLAB_UID}:${MATLAB_GID}
-    working_dir: /src
-    command: > 
-      /bin/bash -c "
-        ## Set mym path
-        matlab -nodisplay -r \"\
-            run('mex_compilation/compile_linux');\
-            addpath('./distribution/mexa64');\
-            savepath;\
-          \";
+    working_dir: /home/muser/notebooks
+    command:
+      - /bin/bash
+      - -c
+      - |
+        ORIG_DIR=$$(pwd)
+        mkdir ~/Documents
+        cd /src
+        # Compile mym, package into toolbox, and install
+        matlab -nodisplay -r "
+          websave([tempdir 'GHToolbox.mltbx'],\
+                  ['https://github.com/datajoint/GHToolbox' \
+                   '/releases/download/' subsref(webread(['https://api.github.com/repos' \
+                                                          '/datajoint/GHToolbox' \
+                                                          '/releases/latest']),\
+                                                 substruct('.', 'tag_name')) \
+                   '/GHToolbox.mltbx']);\
+          matlab.addons.toolbox.installToolbox([tempdir 'GHToolbox.mltbx']);\
+          run('mex_compilation/compile_linux');\
+          origDir = pwd;\
+          cd('distribution/mexa64');\
+          docs = help('mym');\
+          cd(origDir);\
+          ghtb.package('mym',\
+                       'Raphael Guzman',\
+                       'raphael.h.guzman@gmail.com',\
+                       ['MySQL API for MATLAB with support for BLOB objects'],\
+                       docs,\
+                       {'.vscode', '.git', '.gitignore', 'build', 'lib', 'maria-plugin',\
+                        'mex_compilation', 'mysql-connector', 'notebook', 'src', 'zlib',\
+                        '*.txt', '*.env', '*.prf', '*.md', '*.yml', 'tests', '.github',\
+                        'distribution/mexa64/libmysqlclient.so.18.4.'},\
+                       @() strjoin(arrayfun(@(x) num2str(x),\
+                                            cell2mat(struct2cell(mym('version'))),\
+                                            'uni', false),\
+                                   '.'),\
+                       {'distribution/mexa64', 'distribution/mexmaci64',\
+                        'distribution/mexw64', 'mym.m'},\
+                       'toolboxVersionDir', 'distribution/mexa64',\
+                       'toolboxRootDir', '.');\
+          matlab.addons.toolbox.installToolbox('mym.mltbx');\
+          addpath('/src/tests');\
+          savepath;\
+          cd(tempdir);\
+          disp(mym('version'));\
+        "
+        cd "$${ORIG_DIR}"
+        ## Copy preferences
+        # cp /tmp/matlab.prf /home/muser/.matlab/${MATLAB_VERSION}/matlab.prf
         ## Interactive Jupyter Notebook environment
-        jupyter notebook;
-      "
+        jupyter notebook
     mac_address: $MATLAB_HOSTID
     volumes:
       ## Dev mounts
@@ -66,5 +105,6 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       ## Additional mounts may go here
       # - ./notebook:/home/muser/notebooks
+      # - ./matlab.prf:/tmp/matlab.prf
 networks:
   main:

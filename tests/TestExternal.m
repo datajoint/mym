@@ -1,4 +1,4 @@
-classdef TestExternal < tests.Prep
+classdef TestExternal < Prep
     % TestExternal tests external storage serialization/deserialization.
     methods (Test)
         function TestExternal_testArraySerialization(testCase)
@@ -70,8 +70,11 @@ classdef TestExternal < tests.Prep
             hexMtx = reshapedString.';
             decMtx = hex2dec(hexMtx);
             packed = uint8(decMtx);
-            unpacked = testCase.verifyError(@() mym('deserialize', packed), ...
-                'mYm:CrossPlatform:Compatibility');
+            try
+                unpacked = mym('deserialize', packed);
+            catch ME
+                testCase.verifyEqual(ME.identifier, 'mYm:CrossPlatform:Compatibility');
+            end
             % compressed dj0
             % python: pack([1,2,3]*28).hex().upper()
             value = ['5A4C31323300FD03000000000000789C4BC93260600A6180001628CDC5C8C088C4' ...
@@ -81,8 +84,11 @@ classdef TestExternal < tests.Prep
             hexMtx = reshapedString.';
             decMtx = hex2dec(hexMtx);
             packed = uint8(decMtx);
-            unpacked = testCase.verifyError(@() mym('deserialize', packed), ...
-                'mYm:CrossPlatform:Compatibility');
+            try
+                unpacked = mym('deserialize', packed);
+            catch ME
+                testCase.verifyEqual(ME.identifier, 'mYm:CrossPlatform:Compatibility');
+            end
         end
     end
     methods (Static)
@@ -92,13 +98,13 @@ classdef TestExternal < tests.Prep
                 packed_cell = mym('serialize {M}', array_tests{i});
                 packed = packed_cell{1};
                 unpacked = mym('deserialize', packed);
-                testCase.verifyTrue(tests.lib.celleq(array_tests(i),{unpacked}));
+                testCase.verifyTrue(lib.celleq(array_tests(i),{unpacked}));
             end
             % Check multiple at once (extras are ignored)
             packed_cell = mym('serialize {M}, {M}, {M}, {M}, {M}, {M}, {M}, {M}, {M}, {M}', ...
                 array_tests{:,1});
             unpacked = cellfun(@(x) mym('deserialize', x), packed_cell,'UniformOutput',false)';
-            testCase.verifyTrue(tests.lib.celleq(array_tests',unpacked));
+            testCase.verifyTrue(lib.celleq(array_tests',unpacked));
         end
     end
 end

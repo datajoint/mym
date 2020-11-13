@@ -6,4 +6,7 @@ notebook
 .vscode
 win.*
 .DS_Store
-macos.*
+macos*
+*.prj
+matlab.prf
+*.mltbx
