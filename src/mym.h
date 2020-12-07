@@ -33,8 +33,8 @@
 
 // mym version information
 #define MYM_VERSION_MAJOR 2
-#define MYM_VERSION_MINOR 7
-#define MYM_VERSION_BUGFIX 4
+#define MYM_VERSION_MINOR 8
+#define MYM_VERSION_BUGFIX 0
 
 
 // some local defintion
@@ -76,6 +76,9 @@ const bool debug = false;  //  turn on information messages
 	   you get errors on other platforms, move the declarations outside the WIN32 block */
 	inline int strcasecmp(const char *s1, const char *s2) { return strcmp(s1, s2); }
 	inline int strncasecmp(const char *s1, const char *s2, size_t n) { return strncmp(s1, s2, n); }
+	// In windows, strcasecmp and strcasestr dont do a case insensitive execution, so user must
+	// make sure that everything is case sensitive
+	inline const char * strcasestr(const char *s1, const char *s2) { return strstr(s1, s2); }
 #endif
 #include <mysql.h>  //  Definitions for MySQL client API
 
@@ -181,5 +184,7 @@ enum CMD_FLAGS {
 
 static void getSerialFct(const char* rpt, const mxArray* rparg, pfserial& rpf, bool& rpec);
 mxArray* deserialize(const char* rpSerial, const size_t rlength);
+char *hex2char(char *original_val, const size_t vlength);
+char *char2hex(char *original_val, const size_t vlength, const size_t char_length);
 
 #endif // MY_MAT_H

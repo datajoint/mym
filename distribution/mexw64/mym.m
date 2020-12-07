@@ -43,8 +43,13 @@
 %     host:     default is local host. Use colon for port number
 %     user:     default is Unix login name.
 %     password: default says connect without password.
-%   Examples: mym('open','arkiv')     %  connect on default port
-%             mym('open','arkiv:2215')
+%     use_tls:  (optional) TLS encryption type. Values are as follows:
+%                - 'true':           TLS encryption is required.
+%                - 'false':          TLS encryption is disabled.
+%                - 'nan'(default):   TLS encryption utilized if available.
+%   Examples: mym('open','arkiv')      %  connect on default port
+%             mym('open','arkiv:2215') %  TLS Preferred
+%             mym('open','arkiv','root','simple','true') %  TLS Required  
 %   If successful, open returns 0 if successful, and throw an error
 %   otherwise. The program can maintain up to 20 independent connections.
 %   Any command may be preceded by a connection handle -- an integer from 0
@@ -67,7 +72,8 @@
 %   Example:  mym('use cme')
 % mym('status')
 % -------------
-%   Display information about the connection and the server.
+%   Display information about the connection and the server. Connections
+%   utilizing TLS encryption will be displayed as '(encrypted)'.
 %   Return  0  if connection is open and functioning
 %           1  if connection is closed
 %           2  if should be open but we cannot ping the server
@@ -119,6 +125,14 @@
 %            solution is to use the following command:
 %             mym(INSERT INTO tbl(id,txt) VALUES(1000,"{S}")','abc{dfg}h');
 %
+% mym('serialize {placeholder1}, ...',matlab_variable1, ...)
+% -------------
+%   Return : cell array of vectors of type ubyte, a vector per matlab variable 
+%
+% mym('deserialize', serialized_input)
+% -------------
+%   Return : matlab variable of the appropriate type 
+%
 % mym('version')
 % --------------
 % Displays the version of mym when no output arguments are given.
@@ -154,7 +168,7 @@
 %         - use std::max<int>(a, b) instead of max(a, b)
 % v1.0.5  - added the preamble 'u', permitting to save binary fields without using compression
 %         - corrected a bug in mym('closeall')
-%         - corrected various mistakes in the help file (thanks to J�rg Buchholz)
+%         - corrected various mistakes in the help file (thanks to Jörg Buchholz)
 % v1.0.4  corrected the behaviour of mYm with time fields, now return a string dump of the field
 % v1.0.3 	minor corrections
 % v1.0.2  put mYm under GPL license, official release

@@ -311,7 +311,7 @@ static void field2int(const char*s, enum_field_types t, unsigned int flags, void
  *  This is based on an original by Kimmo Uutela
  **********************************************************************/
 static char* getstring(const mxArray*a) {
-    int llen = mxGetM(a)*mxGetN(a)*sizeof(mxChar)+1;
+    int llen = (int)mxGetM(a) * (int)mxGetN(a) * sizeof(mxChar) + 1;
     char*c = (char*) mxCalloc(llen, sizeof(char));
     if (mxGetString(a, c, llen))
         mexErrMsgTxt("Can\'t copy string in getstring()");
@@ -337,7 +337,11 @@ static void updateplugindir() {
     char environment_string[1000];
     strcpy(environment_string,"LIBMYSQL_PLUGIN_DIR=");
     strcat(environment_string,mym_directory);
-    putenv(environment_string);
+    #ifdef _WINDOWS        
+        _putenv(environment_string);
+    #else
+        putenv(environment_string);
+    #endif
 
     // //Confirm Path
     // printf("Path:  %s\n", mym_directory); 
@@ -394,7 +398,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         mexPrintf("cid = %d  jarg = %d\n", cid, jarg);
     /*********************************************************************/
     //  Parse the result based on the first argument
-    enum querytype { OPEN, CLOSE, CLOSE_ALL, USE, STATUS, CMD, VERSION } q;
+    enum querytype { OPEN, CLOSE, CLOSE_ALL, USE, STATUS, CMD, SERIALIZE, DESERIALIZE, VERSION } q;
     char*query = NULL;
     if (nrhs<=jarg)
         q = STATUS;
@@ -414,11 +418,15 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             q = STATUS;
         else if (!strcasecmp(query, "version"))
             q = VERSION;
+        else if (strcasestr(query, "deserialize") != NULL)
+            q = DESERIALIZE;
+        else if (strcasestr(query, "serialize") != NULL)
+            q = SERIALIZE;
         else
             q = CMD;
     }
     //  Check that the arguments are all character strings
-    if (q!=CMD)
+    if ((q!=CMD) & (q!=SERIALIZE) & (q!=DESERIALIZE))
         for (int j = jarg; j<nrhs; j++) {
             if (!mxIsChar(prhs[j])) {
                 mexPrintf("Usage:  %s([id], command, [ host, user, password ])\n", mexFunctionName());
@@ -436,6 +444,10 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             mexPrintf("q = STATUS\n");
         if (q==VERSION)
             mexPrintf("q = VERSION\n");
+        if (q==SERIALIZE)
+            mexPrintf("q = SERIALIZE\n");
+        if (q==DESERIALIZE)
+            mexPrintf("q = DESERIALIZE\n");
         if (q==CMD)
             mexPrintf("q = CMD\n");
     }
@@ -785,6 +797,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                 pnq += po[i]-poq;
                 poq = po[i]+ps[i];
                 pnq += mysql_real_escape_string(conn, pnq, pd[i], plen[i]);
+                pd[i]=NULL;
                 mxFree(pd[i]);
             }
             memcpy(pnq, poq, lq-(poq-query)+1);
@@ -937,15 +950,22 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                     field2int(row[j], f[j].type, f[j].flags, &i_pr[j][i]);
                 } else if (can_convert(f[j].type)) {
                     pr[j][i] = field2num(row[j], f[j].type);
-                }
-                else if ((f[j].type==FIELD_TYPE_BLOB) && (f[j].charsetnr==63))
-                {
+                } else if ((f[j].type==FIELD_TYPE_BLOB) && (f[j].charsetnr==63)) {
                     tmpPr=mxGetField(plhs[0],0,f[j].name);
                     mxSetCell(tmpPr, i, deserialize(row[j], p_lengths[j]));
-                }
-                else {
+                } else if ((f[j].type==FIELD_TYPE_STRING) && (f[j].flags & BINARY_FLAG)) {
                     tmpPr=mxGetField(plhs[0],0,f[j].name);
-                    mxArray*c = mxCreateString(row[j]);
+                    mxArray *c;
+                    const uint8_t *p = (uint8_t *)row[j];
+                    c = mxCreateNumericMatrix (1, p_lengths[j], mxUINT8_CLASS, mxREAL);
+                    uint8_t *vro = (uint8_t*)mxGetData(c);
+                    for (int k=0; k < p_lengths[j]; k++) {
+                        vro[k] = p[k];
+                    }
+                    mxSetCell(tmpPr, i, c);
+                } else {
+                    tmpPr=mxGetField(plhs[0],0,f[j].name);
+                    mxArray *c = mxCreateString(hex2char(row[j], p_lengths[j]));
                     mxSetCell(tmpPr, i, c);
                 }
             }
@@ -953,6 +973,159 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         mxFree(pr);
         mxFree(i_pr);
         mysql_free_result(res);
+    }
+    else if (q==SERIALIZE) {
+        if (debug)
+            mexPrintf("In Serialize...\n");
+        // serialize the matlab variable, it can be an array, cell, struct etc
+        //******************PLACEHOLDER PROCESSING******************
+        // global placeholders variables and constant
+        const unsigned nex = nrhs-jarg-1;   // expected number of placeholders
+        unsigned query_flags = 0;
+        unsigned nb_flags = 0;
+        unsigned nac = 0;                                   // actual number
+        if (debug)
+            mexPrintf("Num of args = %d\n", (int) nex) ;
+
+        if (nex) {
+            // local placeholders variables and constant
+            char** po = 0;                      // pointer to placeholders openning symbols
+            char** pc = 0;                      // pointer to placeholders closing symbols
+            bool*  pec = 0;                     // pointer to 'enable compression field'
+            char** pa = 0;                      // pointer to placeholder in-string argument
+            unsigned* ps = 0;                   // pointer to placeholders size (in bytes)
+            pfserial* pf = 0;                   // pointer to serialization function
+            // LOOK FOR THE PLACEHOLDERS
+            po = (char**)mxCalloc(nex+1, sizeof(char*));
+            pc = (char**)mxCalloc(nex+1, sizeof(char*));
+            if ((po[nac++] = strstr(query, PH_OPEN)))
+            while (po[nac-1]&&nac<=nex) {
+                pc[nac-1] = strstr(po[nac-1]+1, PH_CLOSE);
+                if (pc[nac-1]==0)
+                    mexErrMsgIdAndTxt("mYm:Serialization:Placeholders",
+                        "Placeholders are not correctly closed!");
+                po[nac] = strstr(pc[nac-1]+1, PH_OPEN);
+                nac++;
+            }
+            nac--; // utilized to find {}s
+            if (nac != nex) {
+                mexErrMsgIdAndTxt("mYm:Serialization:Placeholders",
+                    "The number of placeholders differs from that of additional arguments!");
+            }
+
+            // output of serialized variable, for each placeholder
+            char** pd = (char**)mxCalloc(nac, sizeof(char*));
+            // length of bytes in the serialized variable, for each place holder
+            size_t* plen = (size_t*)mxCalloc(nac, sizeof(size_t));
+
+            // now we have the correct number of placeholders
+            // read the types and in-string arguments
+            ps = (unsigned*)mxCalloc(nac, sizeof(unsigned));
+            pa = (char**)mxCalloc(nac, sizeof(char*));
+            pec = (bool*)mxCalloc(nac, sizeof(bool));
+            pf = (pfserial*)mxCalloc(nac, sizeof(pfserial));
+            for (unsigned i = 0; i<nac; i++) {
+                // placeholder function+control ph type+control arg type
+                // first parameter points to the first character of placeholder
+                getSerialFct(po[i]+strlen(PH_OPEN), prhs[jarg+i+1], pf[i], pec[i]);
+                // placeholder size in bytes
+                ps[i] = (unsigned)(pc[i]-po[i]+strlen(PH_OPEN));
+                // placeholder in-string argument
+                pa[i] = po[i]+strlen(PH_OPEN)+1; // e.g. i in {Si}
+                *(pc[i]) = 0;
+                // we can add a termination character in the query,
+                // it will be processed anyway and we already have the original query length
+            }
+            if (debug)
+                mexPrintf("Num of vars = %d\n", (int) nac);
+
+            // serialize
+            uLongf cmp_buf_len = 10000;
+            Bytef* pcmp = (Bytef*)mxCalloc(cmp_buf_len, sizeof(Bytef));
+            size_t nb = 0;
+            for (unsigned i = 0; i<nac; i++) {
+                // serialize individual field
+                pd[i] = pf[i](plen[i], prhs[jarg+i+1], pa[i], true);
+                if (debug)
+                    mexPrintf("Length of serial string = %d\n", plen[i]) ;
+                if (pec[i] && (plen[i]>MIN_LEN_ZLIB)) { // compress if needed
+                    // compress field
+                    const uLongf max_len = compressBound(plen[i]);
+                    if (max_len>cmp_buf_len){
+                        pcmp = (Bytef*)mxRealloc(pcmp, max_len);
+                        cmp_buf_len = max_len;
+                    }
+                    uLongf len = cmp_buf_len;
+                    if (compress(pcmp, &len, (Bytef*)pd[i], plen[i])!=Z_OK)
+                        mexErrMsgIdAndTxt("mYm:Serialization:Compression",
+                            "Compression failed");
+                    const float cmp_rate = plen[i]/(LEN_ZLIB_ID+1.f+sizeof(_uint64)+len);
+                    if (cmp_rate>MIN_CMP_RATE_ZLIB) {
+                        const size_t len_old = plen[i];
+                        plen[i] = LEN_ZLIB_ID+1+sizeof(_uint64)+len;
+                        pd[i] = (char*)mxRealloc(pd[i], plen[i]);
+                        memcpy(pd[i], (const char*)ZLIB_ID, LEN_ZLIB_ID);
+                        *(pd[i]+LEN_ZLIB_ID) = 0;
+
+                        *((_uint64*)(pd[i]+LEN_ZLIB_ID+1)) = (_uint64) len_old;
+                        memcpy(pd[i]+LEN_ZLIB_ID+1+sizeof(_uint64), pcmp, len);
+                        //BUG: *((_uint64*)(pd[i]+LEN_ZLIB_ID+1+sizeof(_uint64))) = (
+                        //          _uint64) len;
+                    }
+                }
+                nb += plen[i];
+            }
+            mxFree(query);
+            mxFree(po);
+            mxFree(pc);
+            mxFree(pec);
+            mxFree(ps);
+            mxFree(pa);
+            if (pcmp!=NULL)
+                mxFree(pcmp);
+
+    //      return the serialized items as cell array of unsigned byte vectors
+            if (nlhs > 0) {
+                mxArray *cell_array_ptr ;
+                mxArray *vec ;
+                cell_array_ptr = mxCreateCellMatrix(nac,1);
+                if (cell_array_ptr != NULL) {
+                    for (unsigned i=0; i<nac; i++){
+                        vec = mxCreateNumericMatrix(plen[i],1,mxUINT8_CLASS,mxREAL) ;
+                        if (vec != NULL) {
+                            memcpy(mxGetPr(vec), pd[i], plen[i]) ;
+                            mxFree(pd[i]) ;
+                            mxSetCell(cell_array_ptr,i,vec);
+                        }
+                        else {
+                            mexErrMsgIdAndTxt("mYm:Serialization:MemoryAllocation",
+                                "Unable to allocate memory for serialized output of a "
+                                "variable\n");
+                        }
+                    }    
+                    mxFree(pd);
+                    mxFree(plen);
+                    plhs[0] = cell_array_ptr; 
+                }
+                else {
+                    mexErrMsgIdAndTxt("mYm:Serialization:CellAllocation",
+                        "Unable to allocate cell matrix for output variables\n");
+                }
+            }
+        }
+    }
+    else if (q==DESERIALIZE) {
+        if ((nlhs == 1) && (nrhs == 2)) {
+            // the 2nd input argument is a pointer to the matlab variable containing 
+            // serialized data
+            const mwSize* input_dims = mxGetDimensions(prhs[1]);
+            plhs[0] = deserialize((const char *) mxGetPr(prhs[1]),
+                (const size_t) std::max<size_t>(input_dims[0], input_dims[1]));
+        }
+        else {
+            mexErrMsgIdAndTxt("mYm:Deserialization:Mismatch",
+                "There must be only one input and one output variable\n");
+        }
     }
     else if (q == VERSION) {
         if (nrhs > (jarg+1))
@@ -1361,7 +1534,8 @@ char* serializeString(size_t &rnBytes, const mxArray*rpArray, const char*rpArg, 
             mexErrMsgTxt("String placeholders only accept CHAR 1-by-M arrays or M-by-1!");
         // matlab string
         p_buf = (char*)mxCalloc(length+1, sizeof(char));
-        mxGetString(rpArray, p_buf, length+1);
+        p_buf = mxArrayToString(rpArray);
+        p_buf = char2hex(p_buf, strlen(p_buf), length + 1);
         rnBytes = length;
     }
     else if (mxIsNumeric(rpArray)||mxIsLogical(rpArray)) {
@@ -1761,7 +1935,7 @@ mxArray* deserialize(const char* rpSerial, const size_t rlength) {
     }
     if (p_serial != 0 && !strcasecmp(p_serial, "dj0"))
         mexErrMsgIdAndTxt("mYm:CrossPlatform:Compatibility",
-                "Blob data ingested utilizing DataJoint-Python version >=0.12 not yet supported.");
+            "Blob data ingested utilizing DataJoint-Python version >=0.12 not yet supported.");
     if (strcmp(p_serial, ID_MATLAB)==0) {
         p_serial = p_serial+LEN_ID_MATLAB+1;
         try {
@@ -1797,4 +1971,79 @@ mxArray* deserialize(const char* rpSerial, const size_t rlength) {
     if (used_compression)
         mxFree(p_cmp);
     return p_res;
+}
+char *hex2char(char *original_val, const size_t char_length) {
+    const uint8_t *pnt = (uint8_t *)original_val;
+    uint8_t *result_pnt = new uint8_t[char_length*4];
+    unsigned int offset = 0;
+    for( unsigned int a = 0; a < char_length; ++a )
+    {
+        if     (pnt[a]<=0x7F) {
+            result_pnt[a+offset] = pnt[a];
+        }
+        else if(pnt[a]<=0x7FF) {
+            result_pnt[a+offset] = ((pnt[a]>>6) + 0xC0);
+            result_pnt[a+offset+1] = ((pnt[a] & 0x3F) + 0x80);
+            offset += 1;
+        }
+        else if(0xD800<=pnt[a] && pnt[a]<=0xDFFF) {
+            mexErrMsgIdAndTxt("mYm:Deserialization:UTF8",
+                "Invalid block of UTF8 detected.");
+        } //invalid block of utf8
+        else if(pnt[a]<=0xFFFF) {
+            result_pnt[a+offset] = ((pnt[a]>>12) + 0xE0);
+            result_pnt[a+offset+1] = (((pnt[a]>>6) & 0x3F) + 0x80);
+            result_pnt[a+offset+2] = ((pnt[a] & 0x3F) + 0x80);
+            offset += 2;
+        }
+        else if(pnt[a]<=0x10FFFF) {
+            result_pnt[a+offset] = ((pnt[a]>>18) + 0xF0);
+            result_pnt[a+offset+1] = (((pnt[a]>>12) & 0x3F) + 0x80);
+            result_pnt[a+offset+2] = (((pnt[a]>>6) & 0x3F) + 0x80);
+            result_pnt[a+offset+3] = ((pnt[a] & 0x3F) + 0x80);
+            offset += 3;
+        }
+    }
+    result_pnt[char_length+offset]= 0x00;
+    return (char *)result_pnt;
+}
+char *char2hex(char *original_val, const size_t vlength, const size_t char_length) {
+    unsigned int idx = 0;
+    unsigned int curr_length = 0;
+    unsigned char u0,u1,u2,u3;
+    uint8_t *result_pnt = new uint8_t[char_length];
+    for(unsigned int a = 0; a < vlength;)
+    {
+        u0 = original_val[a];
+        curr_length = 1;
+        if (((u0 & 0xF8) == 0xF0) && ((a + curr_length + 3) <= vlength)) {
+            curr_length += 3;
+            u1 = original_val[a+1];
+            u2 = original_val[a+2];
+            u3 = original_val[a+3];
+            result_pnt[idx] = (((u0-0xF0)<<18) + ((u1-0x80)<<12) + ((u2-0x80)<<6) + (u3-0x80));
+        }
+        else if (((u0 & 0xF0) == 0xE0) && ((a + curr_length + 2) <= vlength)) {
+            curr_length += 2;
+            u1 = original_val[a+1];
+            u2 = original_val[a+2];
+            if (u0 == 0xED && (u1 & 0xA0) == 0xA0) {
+                mexErrMsgIdAndTxt("mYm:Serialization:UTF8",
+                    "Invalid block of UTF8 detected.");
+            }
+            result_pnt[idx] = (((u0-0xE0)<<12) + ((u1-0x80)<<6) + (u2-0x80));
+        }
+        else if (((u0 & 0xE0) == 0xC0) && ((a + curr_length + 1) <= vlength)) {
+            curr_length++;
+            u1 = original_val[a+1];
+            result_pnt[idx] = (((u0-0xC0)<<6) + (u1-0x80));
+        }
+        else {
+            result_pnt[idx] = u0;
+        }
+        idx++;
+        a += curr_length;
+    }
+    result_pnt[idx]= 0x00;
+    return (char*)result_pnt;
 }

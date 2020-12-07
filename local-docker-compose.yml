@@ -16,7 +16,7 @@ services:
     #   - ./mysql/data:/var/lib/mysql
   fakeservices.datajoint.io:
     <<: *net
-    image: raphaelguzman/nginx:v0.0.8
+    image: raphaelguzman/nginx:v0.0.10
     environment:
     - ADD_db_TYPE=DATABASE
     - ADD_db_ENDPOINT=db:3306
@@ -77,7 +77,7 @@ services:
                        docs,\
                        {'.vscode', '.git', '.gitignore', 'build', 'lib', 'maria-plugin',\
                         'mex_compilation', 'mysql-connector', 'notebook', 'src', 'zlib',\
-                        '*docker-compose.yml', '*.txt', '*.env', '*.prf', '*.md',\
+                        '*.txt', '*.env', '*.prf', '*.md', '*.yml', 'tests', '.github',\
                         'distribution/mexa64/libmysqlclient.so.18.4.'},\
                        @() strjoin(arrayfun(@(x) num2str(x),\
                                             cell2mat(struct2cell(mym('version'))),\
@@ -88,6 +88,8 @@ services:
                        'toolboxVersionDir', 'distribution/mexa64',\
                        'toolboxRootDir', '.');\
           matlab.addons.toolbox.installToolbox('mym.mltbx');\
+          addpath('/src/tests');\
+          savepath;\
           cd(tempdir);\
           disp(mym('version'));\
         "
