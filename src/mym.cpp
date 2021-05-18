@@ -819,12 +819,14 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                 mxFree(pcmp);
         }
         else {
-            // check that no placeholders are present in the query
-            char*p_tmp_o = strstr(query, PH_OPEN);
-            char*p_tmp_c = strstr(query, PH_CLOSE);
+            // check that no placeholders are present in the query except for
             mexPrintf(query);
-            // if (p_tmp_o||p_tmp_c)
-            //     mexErrMsgTxt("The query contains placeholders, but no additional arguments!");
+            for (size_t i = 0; query[i] != '\0'; i++) {
+                if ((query[i] == '{' || query[i] == '}') && i != 0 && query[i - 1] != '\\') {
+                    // Curley bracket doesn't seem to be escaped thus throw and error
+                    mexErrMsgTxt("The query contains placeholders, but no additional arguments!");
+                }
+            } 
         }
         // Process flags
         for (int i=nrhs-nb_flags; i < nrhs; ++i) {
