@@ -354,7 +354,7 @@ static void updateplugindir() {
     mxDestroyArray(mym_fileparts[2]);
 }
 /**********************************************************************
- *mysql():  Execute the actual action
+ * mysql():  Execute the actual action
  * Which action we perform is based on the first input argument,
  * which must be present and must be a character string:
  *   'open', 'close', 'use', 'status', or a legitimate MySQL query.
@@ -694,7 +694,8 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         }
         //******************PLACEHOLDER PROCESSING******************
         // global placeholders variables and constant
-        const unsigned nex = nrhs-jarg-1;   // expected number of placeholders
+        const unsigned expectedNumberOfPlaceholders = nrhs-jarg-1;   // expected number of placeholders
+        mexPrintf("nex = %d\n", expectedNumberOfPlaceholders);
         unsigned query_flags = 0;
         unsigned nb_flags = 0;
         unsigned nac = 0;                                   // actual number
@@ -709,7 +710,8 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             }
         }
 
-        if (nex) {
+        // If there is placeholders, parse them accordingly
+        if (expectedNumberOfPlaceholders) {
             // local placeholders variables and constant
             char** po = 0;                              // pointer to placeholders openning symbols
             char** pc = 0;                              // pointer to placeholders closing symbols
@@ -718,10 +720,10 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             unsigned* ps = 0;                           // pointer to placeholders size (in bytes)
             pfserial* pf = 0;                           // pointer to serialization function
             // LOOK FOR THE PLACEHOLDERS
-            po = (char**)mxCalloc(nex+1, sizeof(char*));
-            pc = (char**)mxCalloc(nex+1, sizeof(char*));
+            po = (char**)mxCalloc(expectedNumberOfPlaceholders+1, sizeof(char*));
+            pc = (char**)mxCalloc(expectedNumberOfPlaceholders+1, sizeof(char*));
             if ((po[nac++] = strstr(query, PH_OPEN)))
-                while (po[nac-1]&&nac<=nex) {
+                while (po[nac-1]&&nac<=expectedNumberOfPlaceholders) {
                     pc[nac-1] = strstr(po[nac-1]+1, PH_CLOSE);
                     if (pc[nac-1]==0)
                         mexErrMsgTxt("Placeholders are not correctly closed!");
@@ -730,10 +732,10 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                 }
             nac--;
             // Adjust placeholders based on the number of flags present
-            if ((nac < nex) && (nac >= (nex-nb_flags))) {
-                nb_flags = nex-nac;
+            if ((nac < expectedNumberOfPlaceholders) && (nac >= (expectedNumberOfPlaceholders-nb_flags))) {
+                nb_flags = expectedNumberOfPlaceholders-nac;
             }
-            else if (nac != nex) {
+            else if (nac != expectedNumberOfPlaceholders) {
                 mexErrMsgTxt("The number of placeholders differs from that of additional arguments!");
             }
             // now we have the correct number of placeholders
@@ -820,8 +822,9 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             // check that no placeholders are present in the query
             char*p_tmp_o = strstr(query, PH_OPEN);
             char*p_tmp_c = strstr(query, PH_CLOSE);
-            if (p_tmp_o||p_tmp_c)
-                mexErrMsgTxt("The query contains placeholders, but no additional arguments!");
+            mexPrintf(query);
+            // if (p_tmp_o||p_tmp_c)
+            //     mexErrMsgTxt("The query contains placeholders, but no additional arguments!");
         }
         // Process flags
         for (int i=nrhs-nb_flags; i < nrhs; ++i) {
@@ -1127,7 +1130,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                 "There must be only one input and one output variable\n");
         }
     }
-    else if (q == VERSION) {
+    else if (q==VERSION) {
         if (nrhs > (jarg+1))
             mexErrMsgTxt("Version command does not take additional inputs");
         if (nlhs == 0) {
@@ -1420,7 +1423,6 @@ char* serializeArray(size_t &rnBytes, const mxArray *rpArray, const char *rpArg,
 
     return p_serial;
 }
-
 
 
 

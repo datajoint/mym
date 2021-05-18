@@ -2,7 +2,7 @@ classdef TestDeclare < Prep
     % TestDeclare tests typical connection scenarios.
     methods (Test)
         function TestDeclare_delcareTable(testCase)
-            % force new connections test
+            % Test table declare with comments that has \{ or \}
             st = dbstack;
             disp(['---------------' st(1).name '---------------']);
             conn1 = mym(-1, 'open', testCase.CONN_INFO.host, ...
