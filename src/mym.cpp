@@ -695,7 +695,6 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         //******************PLACEHOLDER PROCESSING******************
         // global placeholders variables and constant
         const unsigned expectedNumberOfPlaceholders = nrhs-jarg-1;   // expected number of placeholders
-        mexPrintf("nex = %d\n", expectedNumberOfPlaceholders);
         unsigned query_flags = 0;
         unsigned nb_flags = 0;
         unsigned nac = 0;                                   // actual number
@@ -819,14 +818,38 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                 mxFree(pcmp);
         }
         else {
-            // check that no placeholders are present in the query except for
-            mexPrintf(query);
+            // check that no placeholders are present in the query except for \{ and \}
+            char * parsedQueryString = (char*)mxCalloc(strlen(query), sizeof(char)); // Query string with escape character removed
+            size_t parsedQueryStringCurrentIndex = 0;
+
+            // Loop through the query string character by character
             for (size_t i = 0; query[i] != '\0'; i++) {
-                if ((query[i] == '{' || query[i] == '}') && i != 0 && query[i - 1] != '\\') {
-                    // Curley bracket doesn't seem to be escaped thus throw and error
-                    mexErrMsgTxt("The query contains placeholders, but no additional arguments!");
+                if ((query[i] == '{' || query[i] == '}') && i != 0) {
+                    if (query[i - 1] != '\\') {
+                        // Curley bracket doesn't seem to be escaped thus throw and error
+                        mxFree(parsedQueryString);
+                        mexErrMsgTxt("The query contains placeholders, but no additional arguments!");
+                    }
+                    else {
+                        // Valid curley bracket thus add it to the parsedQueryString
+                        parsedQueryString[parsedQueryStringCurrentIndex] = query[i];
+                    }
                 }
-            } 
+                else {
+                    // Non curley bracket thus add it to the parsedQueryString
+                    parsedQueryString[parsedQueryStringCurrentIndex] = query[i];
+                }
+
+                // Increment the currentIndex counter
+                parsedQueryStringCurrentIndex++;
+            }
+            // Add ending character
+            parsedQueryString[parsedQueryStringCurrentIndex] = '\0';
+
+            // Update the query string
+            mxFree(query); // Free up the old string allocation
+            query = parsedQueryString;
+            
         }
         // Process flags
         for (int i=nrhs-nb_flags; i < nrhs; ++i) {
