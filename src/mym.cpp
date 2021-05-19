@@ -819,11 +819,12 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         }
         else {
             // check that no placeholders are present in the query except for \{ and \}
-            char * parsedQueryString = (char*)mxCalloc(strlen(query), sizeof(char)); // Query string with escape character removed
+            char* parsedQueryString = (char*)mxCalloc(strlen(query), sizeof(char)); // Query string with escape character removed
             size_t parsedQueryStringCurrentIndex = 0;
 
             // Loop through the query string character by character
             for (size_t i = 0; query[i] != '\0'; i++) {
+                
                 if ((query[i] == '{' || query[i] == '}') && i != 0) {
                     if (query[i - 1] != '\\') {
                         // Curley bracket doesn't seem to be escaped thus throw and error
@@ -831,7 +832,8 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                         mexErrMsgTxt("The query contains placeholders, but no additional arguments!");
                     }
                     else {
-                        // Valid curley bracket thus add it to the parsedQueryString
+                        // Valid curley bracket thus add it to the parsedQueryString with the \ removed
+                        parsedQueryStringCurrentIndex--;
                         parsedQueryString[parsedQueryStringCurrentIndex] = query[i];
                     }
                 }
@@ -845,6 +847,10 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             }
             // Add ending character
             parsedQueryString[parsedQueryStringCurrentIndex] = '\0';
+            mexPrintf(query);
+            mexPrintf("\n");
+            mexPrintf(parsedQueryString);
+            mexPrintf("\n\n");
 
             // Update the query string
             mxFree(query); // Free up the old string allocation
