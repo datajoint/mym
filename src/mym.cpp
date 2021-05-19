@@ -1009,14 +1009,14 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         // serialize the matlab variable, it can be an array, cell, struct etc
         //******************PLACEHOLDER PROCESSING******************
         // global placeholders variables and constant
-        const unsigned nex = nrhs-jarg-1;   // expected number of placeholders
+        const unsigned expectedNumberOfPlaceholders = nrhs-jarg-1;   // expected number of placeholders
         unsigned query_flags = 0;
         unsigned nb_flags = 0;
         unsigned nac = 0;                                   // actual number
         if (debug)
-            mexPrintf("Num of args = %d\n", (int) nex) ;
+            mexPrintf("Num of args = %d\n", (int) expectedNumberOfPlaceholders) ;
 
-        if (nex) {
+        if (expectedNumberOfPlaceholders) {
             // local placeholders variables and constant
             char** po = 0;                      // pointer to placeholders openning symbols
             char** pc = 0;                      // pointer to placeholders closing symbols
@@ -1025,10 +1025,10 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             unsigned* ps = 0;                   // pointer to placeholders size (in bytes)
             pfserial* pf = 0;                   // pointer to serialization function
             // LOOK FOR THE PLACEHOLDERS
-            po = (char**)mxCalloc(nex+1, sizeof(char*));
-            pc = (char**)mxCalloc(nex+1, sizeof(char*));
+            po = (char**)mxCalloc(expectedNumberOfPlaceholders+1, sizeof(char*));
+            pc = (char**)mxCalloc(expectedNumberOfPlaceholders+1, sizeof(char*));
             if ((po[nac++] = strstr(query, PH_OPEN)))
-            while (po[nac-1]&&nac<=nex) {
+            while (po[nac-1]&&nac<=expectedNumberOfPlaceholders) {
                 pc[nac-1] = strstr(po[nac-1]+1, PH_CLOSE);
                 if (pc[nac-1]==0)
                     mexErrMsgIdAndTxt("mYm:Serialization:Placeholders",
@@ -1037,7 +1037,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                 nac++;
             }
             nac--; // utilized to find {}s
-            if (nac != nex) {
+            if (nac != expectedNumberOfPlaceholders) {
                 mexErrMsgIdAndTxt("mYm:Serialization:Placeholders",
                     "The number of placeholders differs from that of additional arguments!");
             }
