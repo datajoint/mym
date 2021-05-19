@@ -695,11 +695,10 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         //******************PLACEHOLDER PROCESSING******************
         // global placeholders variables and constant
         const unsigned expectedNumberOfPlaceholders = nrhs-jarg-1;   // expected number of placeholders
-        mexPrintf("nex = %d\n", expectedNumberOfPlaceholders);
         unsigned query_flags = 0;
         unsigned nb_flags = 0;
         unsigned nac = 0;                                   // actual number
-        size_t lq = strlen(query);  // original query length, needed at some point
+        size_t lengthOfQuery = strlen(query);  // Length of the query which is needed for mysql_real_query later
         // Check for presence of query flags. This needs to be expanded once we have additional flags
         for (int i=nrhs-1; i > jarg; --i) {
             if (mxIsChar(prhs[i]) && (strcasecmp(getstring(prhs[i]), ML_FLAG_BIGINT_TO_DOUBLE)==0)) {
@@ -791,7 +790,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                 nb += plen[i];
             }
             // create new query
-            char* nq = (char*)mxCalloc(2*nb+lq+1, sizeof(char));  // new query
+            char* nq = (char*)mxCalloc(2*nb+lengthOfQuery+1, sizeof(char));  // new query
             char* pnq = nq; // running pointer to new query
             const char* poq = query; // running pointer to old query
             for (unsigned i = 0; i<nac; i++) {
@@ -802,12 +801,12 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                 pd[i]=NULL;
                 mxFree(pd[i]);
             }
-            memcpy(pnq, poq, lq-(poq-query)+1);
+            memcpy(pnq, poq, lengthOfQuery-(poq-query)+1);
             // replace the old query by the new one
-            pnq += lq-(poq-query)+1;
+            pnq += lengthOfQuery-(poq-query)+1;
             mxFree(query);
             query = nq;
-            lq = (ulong)(pnq-nq);
+            lengthOfQuery = (ulong)(pnq-nq);
             mxFree(po);
             mxFree(pc);
             mxFree(pec);
@@ -818,16 +817,41 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             if (pcmp!=NULL)
                 mxFree(pcmp);
         }
-        else {
-            // check that no placeholders are present in the query except for
-            mexPrintf(query);
-            for (size_t i = 0; query[i] != '\0'; i++) {
-                if ((query[i] == '{' || query[i] == '}') && i != 0 && query[i - 1] != '\\') {
+        // Check that no placeholders are present in the query except for \{ and \}
+        char* parsedQueryString = (char*)mxCalloc(strlen(query), sizeof(char)); // Query string with escape character removed
+        size_t parsedQueryStringCurrentIndex = 0;
+
+        // Loop through the query string character by character
+        for (size_t i = 0; query[i] != '\0'; i++) {
+            
+            if ((query[i] == '{' || query[i] == '}') && i != 0) {
+                if (query[i - 1] != '\\') {
                     // Curley bracket doesn't seem to be escaped thus throw and error
+                    mxFree(parsedQueryString);
                     mexErrMsgTxt("The query contains placeholders, but no additional arguments!");
                 }
-            } 
+                else {
+                    // Valid curley bracket thus add it to the parsedQueryString with the \ removed
+                    parsedQueryStringCurrentIndex--;
+                    parsedQueryString[parsedQueryStringCurrentIndex] = query[i];
+                }
+            }
+            else {
+                // Non curley bracket thus add it to the parsedQueryString
+                parsedQueryString[parsedQueryStringCurrentIndex] = query[i];
+            }
+
+            // Increment the currentIndex counter
+            parsedQueryStringCurrentIndex++;
         }
+        // Add ending character
+        parsedQueryString[parsedQueryStringCurrentIndex] = '\0';
+
+        // Update the query string
+        mxFree(query); // Free up the old string allocation
+        query = parsedQueryString;
+        lengthOfQuery = strlen(query); // Update the length of the query
+        
         // Process flags
         for (int i=nrhs-nb_flags; i < nrhs; ++i) {
             if  (strcasecmp(getstring(prhs[i]), ML_FLAG_BIGINT_TO_DOUBLE)==0) {
@@ -837,7 +861,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
 
         //  Execute the query (data stays on server)
         if (nac!=0) {
-            if (mysql_real_query(conn, query, lq))
+            if (mysql_real_query(conn, query, lengthOfQuery))
                 mexErrMsgTxt(mysql_error(conn));
         }
         else if (mysql_query(conn, query))

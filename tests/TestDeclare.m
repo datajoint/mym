@@ -10,8 +10,8 @@ classdef TestDeclare < Prep
                 'false');
             
             mym(conn1, ['create database `' testCase.PREFIX '_declare`']);
-            mym(['create table `' testCase.PREFIX '_declare`.`test_table` ' ...
-                '(id int, data varchar(30) default null) COMMENT "\{username\}_\{subject_nickname\}"']);
+            mym(['create table {S}(id int, data varchar(30) default null) COMMENT "\{username\}_\{subject_nickname\}"'], ...
+                sprintf('`%s_%s`.`%s`', testCase.PREFIX, 'declare', 'test_table'));
             mym(conn1, ['drop database `' testCase.PREFIX '_declare`']);
             mym(conn1, 'close');
         end
