@@ -1193,9 +1193,9 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
  */
 bool isSubstringFountAtTheBeginningCaseInsenstive(const char* sourceString, const char* subString)
 {
-    for (size_t i = 0; b[i] != '\0'; i++) 
+    for (size_t i = 0; subString[i] != '\0'; i++) 
     {
-        if (tolower(a[i]) != tolower(b[i]))
+        if (tolower(sourceString[i]) != tolower(subString[i]))
         {
             return false;
         }
