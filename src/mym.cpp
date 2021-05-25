@@ -1186,12 +1186,12 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
 }
 
 /**
- * Helper function for checking if string b is found at the start of string a
- * @param a Source string to find b at the start
- * @param b String target to look at the beginning of a
- * @returns Boolean answer if b was found at the start of a
+ * Helper function for checking if string subString is found at the start of string sourceString
+ * @param sourceString Source string to find subString at the start
+ * @param subString String target to look at the beginning of sourceString
+ * @returns Boolean answer if subString was found at the start of sourceString
  */
-bool isSubstringFountAtTheBeginningCaseInsenstive(const char* a, const char* b) 
+bool isSubstringFountAtTheBeginningCaseInsenstive(const char* sourceString, const char* subString)
 {
     for (size_t i = 0; b[i] != '\0'; i++) 
     {
