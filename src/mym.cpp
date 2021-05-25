@@ -817,41 +817,47 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             if (pcmp!=NULL)
                 mxFree(pcmp);
         }
-        // Check that no placeholders are present in the query except for \{ and \}
-        char* parsedQueryString = (char*)mxCalloc(strlen(query), sizeof(char)); // Query string with escape character removed
-        size_t parsedQueryStringCurrentIndex = 0;
+        
+        // Check if it is Create or Alter, if so then do curely bracket parsing
+        if (isSubstringFountAtTheBeginningCaseInsenstive(query, "CREATE") || isSubstringFountAtTheBeginningCaseInsenstive(query, "ALTER"))
+        {
+             // Check that no placeholders are present in the query except for \{ and \}
+            char* parsedQueryString = (char*)mxCalloc(strlen(query), sizeof(char)); // Query string with escape character removed
+            size_t parsedQueryStringCurrentIndex = 0;
 
-        // Loop through the query string character by character
-        for (size_t i = 0; query[i] != '\0'; i++) {
-            
-            if ((query[i] == '{' || query[i] == '}') && i != 0) {
-                if (query[i - 1] != '\\') {
-                    // Curley bracket doesn't seem to be escaped thus throw and error
-                    mxFree(parsedQueryString);
-                    mexErrMsgTxt("The query contains placeholders, but no additional arguments!");
+            // Loop through the query string character by character
+            for (size_t i = 0; query[i] != '\0'; i++) {
+                
+                if ((query[i] == '{' || query[i] == '}') && i != 0) {
+                    if (query[i - 1] != '\\') {
+                        // Curley bracket doesn't seem to be escaped thus throw and error
+                        mxFree(parsedQueryString);
+                        mexErrMsgTxt("The query contains placeholders, but no additional arguments!");
+                    }
+                    else {
+                        // Valid curley bracket thus add it to the parsedQueryString with the \ removed
+                        parsedQueryStringCurrentIndex--;
+                        parsedQueryString[parsedQueryStringCurrentIndex] = query[i];
+                    }
                 }
                 else {
-                    // Valid curley bracket thus add it to the parsedQueryString with the \ removed
-                    parsedQueryStringCurrentIndex--;
+                    // Non curley bracket thus add it to the parsedQueryString
                     parsedQueryString[parsedQueryStringCurrentIndex] = query[i];
                 }
-            }
-            else {
-                // Non curley bracket thus add it to the parsedQueryString
-                parsedQueryString[parsedQueryStringCurrentIndex] = query[i];
-            }
 
-            // Increment the currentIndex counter
-            parsedQueryStringCurrentIndex++;
+                // Increment the currentIndex counter
+                parsedQueryStringCurrentIndex++;
+            }
+            // Add ending character
+            parsedQueryString[parsedQueryStringCurrentIndex] = '\0';
+
+            // Update the query string
+            mxFree(query); // Free up the old string allocation
+            query = parsedQueryString;
+            lengthOfQuery = strlen(query); // Update the length of the query
+            
         }
-        // Add ending character
-        parsedQueryString[parsedQueryStringCurrentIndex] = '\0';
-
-        // Update the query string
-        mxFree(query); // Free up the old string allocation
-        query = parsedQueryString;
-        lengthOfQuery = strlen(query); // Update the length of the query
-        
+       
         // Process flags
         for (int i=nrhs-nb_flags; i < nrhs; ++i) {
             if  (strcasecmp(getstring(prhs[i]), ML_FLAG_BIGINT_TO_DOUBLE)==0) {
@@ -1179,6 +1185,23 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
     }
 }
 
+/**
+ * Helper function for checking if string b is found at the start of string a
+ * @param a Source string to find b at the start
+ * @param b String target to look at the beginning of a
+ * @returns Boolean answer if b was found at the start of a
+ */
+bool isSubstringFountAtTheBeginningCaseInsenstive(const char* a, const char* b) 
+{
+    for (size_t i = 0; b[i] != '\0'; i++) 
+    {
+        if (tolower(a[i]) != tolower(b[i]))
+        {
+            return false;
+        }
+    }
+    return true;
+}
 
 /*************************************SERIALIZE******************************************/
 // Serialize a structure array
