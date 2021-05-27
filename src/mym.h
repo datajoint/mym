@@ -34,7 +34,7 @@
 // mym version information
 #define MYM_VERSION_MAJOR 2
 #define MYM_VERSION_MINOR 8
-#define MYM_VERSION_BUGFIX 1
+#define MYM_VERSION_BUGFIX 2
 
 
 // some local defintion
@@ -48,6 +48,7 @@
 #include <mex.h>  //  Definitions for Matlab API
 #include <zlib.h>
 #include <math.h>
+#include <ctype.h>
 #include "matrix.h"
 
 // We need a platform- and compiler-independent (rofl) fixed size 64 bit integer
@@ -105,6 +106,8 @@ mxArray* deserializeCell(const char* rpSerial, const size_t rlength);
 int file_length(FILE *f); // get the size of a file in byte
 unsigned long min_mysql_escape(char* rpout, const char* rpin, const unsigned long nin);
 void safe_read_64uint(mwSize* dst, _uint64* src, size_t n);
+bool isSubstringFountAtTheBeginningCaseInsenstive(const char* sourceString, const char* subString);
+void removeWhiteSpaceAtTheBeginning(char* string);
 //void safe_read_64uint(mwSize* dst, unsigned __int64* src, size_t n);
 
 /**********************************************************************
