@@ -399,13 +399,14 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
     /*********************************************************************/
     //  Parse the result based on the first argument
     enum querytype { OPEN, CLOSE, CLOSE_ALL, USE, STATUS, CMD, SERIALIZE, DESERIALIZE, VERSION } q;
-    char*query = NULL;
+    char* query = NULL;
     if (nrhs<=jarg)
         q = STATUS;
     else {
         if (!mxIsChar(prhs[jarg]))
             mexErrMsgTxt("The command string is missing!");
         query = getstring(prhs[jarg]);
+
         if (!strcasecmp(query, "open"))
             q = OPEN;
         else if (!strcasecmp(query, "close"))
@@ -818,6 +819,11 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                 mxFree(pcmp);
         }
         
+
+        // Remove any white spaces at the beginning (NOTE for some reason mxFree crashes if this runs before it gets to the CMD block)
+        removeWhiteSpaceAtTheBeginning(query);
+        lengthOfQuery = strlen(query);
+
         // Check if it is Create or Alter, if so then do curely bracket parsing
         if (isSubstringFountAtTheBeginningCaseInsenstive(query, "CREATE") || isSubstringFountAtTheBeginningCaseInsenstive(query, "ALTER"))
         {
@@ -1183,6 +1189,43 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         mexPrintf("Unknown query type q = %d\n", q);
         mexErrMsgTxt("Internal code error");
     }
+}
+
+void removeWhiteSpaceAtTheBeginning(char* string) 
+{
+    mexPrintf("%s\n", string);
+    // Do a quick check at the start to see if any work needs to be done
+    if (!strlen(string) || string[0] != ' ') 
+    {
+        // The first character is not an empty space thus just return the orignal string
+        return;
+    }
+
+    // There are some white spaces that needs to be removed
+    size_t currentStringIndex = 1; // Offset of 1 due to the check at the beginning
+
+    // Loop through the string until a none whitespace character is found
+    for (; string[currentStringIndex] != '\0'; currentStringIndex++) 
+    {
+        if (string[currentStringIndex] != ' ') 
+        {
+            break;
+        }
+    }
+    mexPrintf("ajsdfkl;ajsldkfjasfd%s\n", string);
+    char* sanitizeString = (char*)mxCalloc(strlen(string), sizeof(char));
+    size_t sanitizeStringIndex = 0;
+    // Copy the rest of the string over
+    for (; string[currentStringIndex] != '\0'; currentStringIndex++) 
+    {
+        sanitizeString[sanitizeStringIndex] = string[currentStringIndex];
+        sanitizeStringIndex++;
+    }
+
+    // Replace the string
+    mxFree(string); // Free up the old string allocation
+    string = sanitizeString;
+    mexPrintf("%s\n", string);
 }
 
 /**

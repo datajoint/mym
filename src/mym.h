@@ -107,6 +107,7 @@ int file_length(FILE *f); // get the size of a file in byte
 unsigned long min_mysql_escape(char* rpout, const char* rpin, const unsigned long nin);
 void safe_read_64uint(mwSize* dst, _uint64* src, size_t n);
 bool isSubstringFountAtTheBeginningCaseInsenstive(const char* sourceString, const char* subString);
+void removeWhiteSpaceAtTheBeginning(char* string);
 //void safe_read_64uint(mwSize* dst, unsigned __int64* src, size_t n);
 
 /**********************************************************************
