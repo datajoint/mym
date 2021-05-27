@@ -406,7 +406,6 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         if (!mxIsChar(prhs[jarg]))
             mexErrMsgTxt("The command string is missing!");
         query = getstring(prhs[jarg]);
-
         if (!strcasecmp(query, "open"))
             q = OPEN;
         else if (!strcasecmp(query, "close"))
@@ -819,7 +818,6 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                 mxFree(pcmp);
         }
         
-
         // Remove any white spaces at the beginning (NOTE for some reason mxFree crashes if this runs before it gets to the CMD block)
         removeWhiteSpaceAtTheBeginning(query);
         lengthOfQuery = strlen(query);
@@ -1193,9 +1191,8 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
 
 void removeWhiteSpaceAtTheBeginning(char* string) 
 {
-    mexPrintf("%s\n", string);
     // Do a quick check at the start to see if any work needs to be done
-    if (!strlen(string) || string[0] != ' ') 
+    if (!strlen(string) || !isspace(string[0])) 
     {
         // The first character is not an empty space thus just return the orignal string
         return;
@@ -1212,7 +1209,7 @@ void removeWhiteSpaceAtTheBeginning(char* string)
             break;
         }
     }
-    mexPrintf("ajsdfkl;ajsldkfjasfd%s\n", string);
+
     char* sanitizeString = (char*)mxCalloc(strlen(string), sizeof(char));
     size_t sanitizeStringIndex = 0;
     // Copy the rest of the string over
@@ -1225,7 +1222,6 @@ void removeWhiteSpaceAtTheBeginning(char* string)
     // Replace the string
     mxFree(string); // Free up the old string allocation
     string = sanitizeString;
-    mexPrintf("%s\n", string);
 }
 
 /**
