@@ -52,8 +52,14 @@ typedef size_t mwIndex;
 
 //The crazy do{}while(0) constructions circumvents unexpected results when using the macro followed by a semicolon in
 //an if/else construction
-#define READ_UINT64(dst,src) do{ safe_read_64uint( (dst), (_uint64*)(src), 1 );   (src) += sizeof(_uint64);  } while(0)
-#define READ_UINT64S(dst,src,n) do{ safe_read_64uint( (dst), (_uint64*)(src), n );   (src) += (n) * sizeof(_uint64);  } while(0)
+#if DJ_32BIT_FLAG == 1
+  #define READ_UINT64(dst,src) do{ safe_read_32uint( (dst), (_uint32*)(src), 1 );   (src) += sizeof(_uint32);  } while(0)
+  #define READ_UINT64S(dst,src,n) do{ safe_read_32uint( (dst), (_uint32*)(src), n );   (src) += (n) * sizeof(_uint32);  } while(0)
+#else
+  #define READ_UINT64(dst,src) do{ safe_read_64uint( (dst), (_uint64*)(src), 1 );   (src) += sizeof(_uint64);  } while(0)
+  #define READ_UINT64S(dst,src,n) do{ safe_read_64uint( (dst), (_uint64*)(src), n );   (src) += (n) * sizeof(_uint64);  } while(0)
+#endif
+
 // Macro to write fixed size 64 bit uints
 #define WRITE_UINT64(p,val) do{  *((_uint64*)(p)) = (_uint64)(val);    (p) += sizeof(_uint64);  }while(0)
 #define WRITE_UINT64S(p,val,n) do{     _uint64* pTemp = (_uint64*) (p); \
@@ -1936,6 +1942,12 @@ void safe_read_64uint(mwSize* dst, _uint64* src, size_t n) {
             mexErrMsgTxt("This dataset exceeds the size limitations of the current platform (e.g. reading huge matrices on 32 bit machines)");
         else
             dst[i] = (mwSize)(val & castMask);
+    }
+}
+
+void safe_read_32uint(mwSize* dst, _uint32* src, size_t n) {
+    for (size_t i=0; i < n; ++i) {
+            dst[i] = mwSize(src[i]);
     }
 }
 
