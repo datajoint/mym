@@ -36,6 +36,9 @@
 #define MYM_VERSION_MINOR 8
 #define MYM_VERSION_BUGFIX 2
 
+// runtime setting to read integers as 32-bit to read blobs created by the 32-bit
+// version of the mYm library for MATLAB
+#define USE_32BIT_DIMS 0
 
 // some local defintion
 #ifndef ulong
@@ -57,9 +60,13 @@
 	#include <sys/types.h>
 	#define _uint64 uint64_t
 	#define _int64  int64_t
+	#define _uint32 uint32_t
+	#define _int32  int64_t
 #elif _MSC_VER
 	#define _uint64 unsigned __int64
 	#define _int64 __int64
+	#define _uint32 unsigned __int32
+	#define _int32 __int32
 	#define _WINDOWS 1
 #else
 	#error "I don't know how to declare a 64 bit uint for this compiler. Please fix!"
@@ -106,6 +113,7 @@ mxArray* deserializeCell(const char* rpSerial, const size_t rlength);
 int file_length(FILE *f); // get the size of a file in byte
 unsigned long min_mysql_escape(char* rpout, const char* rpin, const unsigned long nin);
 void safe_read_64uint(mwSize* dst, _uint64* src, size_t n);
+void safe_read_32uint(mwSize* dst, _uint32* src, size_t n);
 bool isSubstringFountAtTheBeginningCaseInsenstive(const char* sourceString, const char* subString);
 void removeWhiteSpaceAtTheBeginning(char* string);
 //void safe_read_64uint(mwSize* dst, unsigned __int64* src, size_t n);
