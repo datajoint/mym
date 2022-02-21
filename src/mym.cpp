@@ -52,12 +52,14 @@ typedef size_t mwIndex;
 
 //The crazy do{}while(0) constructions circumvents unexpected results when using the macro followed by a semicolon in
 //an if/else construction
-#if USE_32BIT_DIMS == 1
+if (use32bitdims()) {
     #define READ_UINT(dst,src) do{ safe_read_32uint( (dst), (_uint32*)(src), 1 );   (src) += sizeof(_uint32);  } while(0)
     #define READ_UINTS(dst,src,n) do{ safe_read_32uint( (dst), (_uint32*)(src), n );   (src) += (n) * sizeof(_uint32);  } while(0)
-#else
+}
+else {
     #define READ_UINT(dst,src) do{ safe_read_64uint( (dst), (_uint64*)(src), 1 );   (src) += sizeof(_uint64);  } while(0)
     #define READ_UINTS(dst,src,n) do{ safe_read_64uint( (dst), (_uint64*)(src), n );   (src) += (n) * sizeof(_uint64);  } while(0)
+}
 // Macro to write fixed size 64 bit uints
 #define WRITE_UINT64(p,val) do{  *((_uint64*)(p)) = (_uint64)(val);    (p) += sizeof(_uint64);  }while(0)
 #define WRITE_UINT64S(p,val,n) do{     _uint64* pTemp = (_uint64*) (p); \
@@ -356,6 +358,18 @@ static void updateplugindir() {
     mxDestroyArray(mym_fileparts[0]);
     mxDestroyArray(mym_fileparts[1]);
     mxDestroyArray(mym_fileparts[2]);
+}
+/**********************************************************************
+ *use32bitdims():   Check if dimensions should be read as 32-bit
+ *  Get USE_32_BIT_DIMS environment variable
+ *  Return true/false based on USE_32_BIT_DIMS flag
+ **********************************************************************/
+static bool use32bitdims() {
+    if (tolower(getenv("USE_32BIT_DIMS")) == "true")
+        return true;
+    else 
+        return false;
+
 }
 /**********************************************************************
  * mysql():  Execute the actual action

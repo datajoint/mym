@@ -36,10 +36,6 @@
 #define MYM_VERSION_MINOR 8
 #define MYM_VERSION_BUGFIX 2
 
-// runtime setting to read integers as 32-bit to read blobs created by the 32-bit
-// version of the mYm library for MATLAB
-#define USE_32BIT_DIMS 0
-
 // some local defintion
 #ifndef ulong
 	typedef unsigned long ulong;
