@@ -369,7 +369,6 @@ static bool use32bitdims() {
         return true;
     else 
         return false;
-
 }
 /**********************************************************************
  * mysql():  Execute the actual action
