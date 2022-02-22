@@ -57,7 +57,7 @@
 	#define _uint64 uint64_t
 	#define _int64  int64_t
 	#define _uint32 uint32_t
-	#define _int32  int64_t
+	#define _int32  int32_t
 #elif _MSC_VER
 	#define _uint64 unsigned __int64
 	#define _int64 __int64
