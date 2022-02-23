@@ -90,27 +90,25 @@ classdef TestExternal < Prep
                 testCase.verifyEqual(ME.identifier, 'mYm:CrossPlatform:Compatibility');
             end
         end
-        % function TestExternal_test32BitRead(testCase)
-        %     st = dbstack;
-        %     disp(['---------------' st(1).name '---------------']);
-        %     % https://github.com/datajoint/mym/issues/85
-        %     % normal dj0
-        %     % python: pack([1,2,3]).hex().upper()
-        %     value = ['6D596D00530200000001000000010000000400000068697473007369646573007461736B73007374616765004D000000410200000001000000070000000600000000000000000000000000F8FF000000000000F03F000000000000F03F0000000000000000000000000000F03F0000000000000000000000000000F8FF230000004102000000010000000700000004000000000000006C006C006C006C00720072006C002300000041020000000100000007000000040000000000000064006400640064006400640064002500000041020000000100000008000000040000000000000053007400610067006500200031003000'];
-        %     hexstring = value';
-        %     reshapedString = reshape(hexstring,2,length(value)/2);
-        %     hexMtx = reshapedString.';
-        %     decMtx = hex2dec(hexMtx);
-        %     packed = uint8(decMtx);
-        %     try
-        %         setenv('USE_32BIT_DIMS', 'true');
-        %         unpacked = mym('deserialize', packed);
-        %         setenv('USE_32BIT_DIMS', 'false');
-        %         disp(unpacked);
-        %     catch ME
-        %         testCase.verifyEqual(ME.identifier, 'mYm:CrossPlatform:Compatibility');
-        %     end
-        % end
+        function TestExternal_test32BitRead(testCase)
+            st = dbstack;
+            disp(['---------------' st(1).name '---------------']);
+            % https://github.com/datajoint/mym/issues/86
+            value = ['6D596D00530200000001000000010000000400000068697473007369646573007461736B73007374616765004D000000410200000001000000070000000600000000000000000000000000F8FF000000000000F03F000000000000F03F0000000000000000000000000000F03F0000000000000000000000000000F8FF230000004102000000010000000700000004000000000000006C006C006C006C00720072006C002300000041020000000100000007000000040000000000000064006400640064006400640064002500000041020000000100000008000000040000000000000053007400610067006500200031003000'];
+            hexstring = value';
+            reshapedString = reshape(hexstring,2,length(value)/2);
+            hexMtx = reshapedString.';
+            decMtx = hex2dec(hexMtx);
+            packed = uint8(decMtx);
+            try
+                setenv('USE_32BIT_DIMS', 'true');
+                unpacked = mym('deserialize', packed);
+                setenv('USE_32BIT_DIMS', 'false');
+                disp(unpacked);
+            catch ME
+                testCase.verifyEqual(ME.identifier, 'mYm:CrossPlatform:Compatibility');
+            end
+        end
     end
     methods (Static)
         function TestExternal_verify(testCase, array_tests)
