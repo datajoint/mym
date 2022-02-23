@@ -36,6 +36,7 @@
 #define MYM_VERSION_MINOR 8
 #define MYM_VERSION_BUGFIX 2
 
+
 // some local defintion
 #ifndef ulong
 	typedef unsigned long ulong;
