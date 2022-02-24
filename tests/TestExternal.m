@@ -104,7 +104,6 @@ classdef TestExternal < Prep
                 setenv('USE_32BIT_DIMS', 'true');
                 unpacked = mym('deserialize', packed);
                 setenv('USE_32BIT_DIMS', 'false');
-                disp(unpacked);
             catch ME
                 testCase.verifyEqual(ME.identifier, 'mYm:CrossPlatform:Compatibility');
             end
