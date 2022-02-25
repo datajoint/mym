@@ -365,7 +365,7 @@ static void updateplugindir() {
  **********************************************************************/
 static bool use32bitdims() {
     if (getenv("USE_32BIT_DIMS"))
-        return strcasecmp(getenv("USE_32BIT_DIMS"), "true") == 0
+        return strcasecmp(getenv("USE_32BIT_DIMS"), "true") == 0;
     else
         return false;
 }
