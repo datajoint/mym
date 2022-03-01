@@ -100,13 +100,18 @@ classdef TestExternal < Prep
             hexMtx = reshapedString.';
             decMtx = hex2dec(hexMtx);
             packed = uint8(decMtx);
-            try
-                setenv('USE_32BIT_DIMS', 'true');
-                unpacked = mym('deserialize', packed);
-                setenv('USE_32BIT_DIMS', 'false');
-            catch ME
-                testCase.verifyEqual(ME.identifier, 'mYm:CrossPlatform:Compatibility');
-            end
+
+            data = struct;
+            data.stage = 'Stage 10';
+            data.tasks = 'ddddddd';
+            data.sides = 'llllrrl';
+            data.hits = [NaN,1,1,0,1,0,NaN];
+
+            setenv('USE_32BIT_DIMS', 'true');
+            unpacked = mym('deserialize', packed);
+            setenv('USE_32BIT_DIMS', 'false');
+ 
+            testCase.verifyEqual(unpacked, data);
         end
     end
     methods (Static)
