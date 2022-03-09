@@ -52,8 +52,13 @@ typedef size_t mwIndex;
 
 //The crazy do{}while(0) constructions circumvents unexpected results when using the macro followed by a semicolon in
 //an if/else construction
-#define READ_UINT64(dst,src) do{ safe_read_64uint( (dst), (_uint64*)(src), 1 );   (src) += sizeof(_uint64);  } while(0)
-#define READ_UINT64S(dst,src,n) do{ safe_read_64uint( (dst), (_uint64*)(src), n );   (src) += (n) * sizeof(_uint64);  } while(0)
+#define READ_UINT(dst,src) \
+    if (use32bitdims()) do{ safe_read_32uint( (dst), (_uint32*)(src), 1 );   (src) += sizeof(_uint32);  } while(0); \
+    else do{ safe_read_64uint( (dst), (_uint64*)(src), 1 );   (src) += sizeof(_uint64);  } while(0)
+#define READ_UINTS(dst,src,n) \
+    if (use32bitdims()) do{ safe_read_32uint( (dst), (_uint32*)(src), n );   (src) += (n) * sizeof(_uint32);  } while(0); \
+    else do{ safe_read_64uint( (dst), (_uint64*)(src), n );   (src) += (n) * sizeof(_uint64);  } while(0)
+
 // Macro to write fixed size 64 bit uints
 #define WRITE_UINT64(p,val) do{  *((_uint64*)(p)) = (_uint64)(val);    (p) += sizeof(_uint64);  }while(0)
 #define WRITE_UINT64S(p,val,n) do{     _uint64* pTemp = (_uint64*) (p); \
@@ -352,6 +357,14 @@ static void updateplugindir() {
     mxDestroyArray(mym_fileparts[0]);
     mxDestroyArray(mym_fileparts[1]);
     mxDestroyArray(mym_fileparts[2]);
+}
+/**********************************************************************
+ *use32bitdims():   Check if dimensions should be read as 32-bit
+ *  Get MYM_USE_32BIT_DIMS environment variable
+ *  Return true/false based on MYM_USE_32BIT_DIMS flag
+ **********************************************************************/
+static bool use32bitdims() {
+    return getenv("MYM_USE_32BIT_DIMS") && strcasecmp(getenv("MYM_USE_32BIT_DIMS"), "true") == 0;
 }
 /**********************************************************************
  * mysql():  Execute the actual action
@@ -1727,11 +1740,11 @@ mxArray* deserializeArray(const char *rpSerial, const size_t rlength)
 
     // number of dimensions
     mwSize ndims;
-    READ_UINT64(&ndims, p_serial);
+    READ_UINT(&ndims, p_serial);
     
     // length of each dimension
     mwSize *pdims = (mwSize*) mxCalloc(ndims, sizeof(mwSize));
-    READ_UINT64S(pdims, p_serial, ndims);
+    READ_UINTS(pdims, p_serial, ndims);
     
     // classID
     mxClassID class_id;
@@ -1770,9 +1783,9 @@ mxArray* deserializeSparse(const char *rpSerial, const size_t rlength)
 
     // number of rows and columns
     mwSize rows, columns, nzmax;
-    READ_UINT64(&rows, p_serial);
-    READ_UINT64(&columns, p_serial);
-    READ_UINT64(&nzmax, p_serial);
+    READ_UINT(&rows, p_serial);
+    READ_UINT(&columns, p_serial);
+    READ_UINT(&nzmax, p_serial);
 
     // classID
     mxClassID class_id;
@@ -1796,11 +1809,11 @@ mxArray* deserializeSparse(const char *rpSerial, const size_t rlength)
 
     // JC data
     mwSize* pJcData = mxGetJc(p_array);
-    READ_UINT64S(pJcData, p_serial, columns+1);
+    READ_UINTS(pJcData, p_serial, columns+1);
     
     // size of IR array
     mwSize* pIrData = mxGetIr(p_array);
-    READ_UINT64S(pIrData, p_serial, nzmax);
+    READ_UINTS(pIrData, p_serial, nzmax);
     
     // real part data
     void* pdata = mxGetData(p_array);
@@ -1823,11 +1836,11 @@ mxArray* deserializeStruct(const char* rpSerial, const size_t rlength){
     const char*p_serial = rpSerial;
     // number of dimensions
     mwSize ndims;
-    READ_UINT64(&ndims, p_serial);
+    READ_UINT(&ndims, p_serial);
     
     // length of each dimension
     mwSize *pdims = (mwSize*) mxCalloc(ndims, sizeof(mwSize));
-    READ_UINT64S(pdims, p_serial, ndims);
+    READ_UINTS(pdims, p_serial, ndims);
     
     mwSize nelts = 1;
     for (int i = 0; i<ndims; i++)
@@ -1849,7 +1862,7 @@ mxArray* deserializeStruct(const char* rpSerial, const size_t rlength){
         for (int j = 0; j<nfields; j++) {
             mwSize nbytes1;
             size_t nbytes;
-            READ_UINT64(&nbytes1, p_serial);
+            READ_UINT(&nbytes1, p_serial);
             nbytes = nbytes1;
             mxArray* pf;
             if (*p_serial==ID_ARRAY)
@@ -1874,11 +1887,11 @@ mxArray* deserializeCell(const char* rpSerial, const size_t rlength){
     const char* p_serial = rpSerial;
     // number of dimensions
     mwSize ndims;
-    READ_UINT64(&ndims, p_serial);
+    READ_UINT(&ndims, p_serial);
     
     // length of each dimension
     mwSize *pdims = (mwSize*) mxCalloc(ndims, sizeof(mwSize));
-    READ_UINT64S(pdims, p_serial, ndims);
+    READ_UINTS(pdims, p_serial, ndims);
     
     mwSize nelts = 1;
     for (int i = 0; i<ndims; i++)
@@ -1889,7 +1902,7 @@ mxArray* deserializeCell(const char* rpSerial, const size_t rlength){
     for (int i = 0; i<nelts; i++){
         size_t nbytes;
         mwSize nbytes1;
-        READ_UINT64(&nbytes1, p_serial);
+        READ_UINT(&nbytes1, p_serial);
         nbytes=nbytes1;
         mxArray* pf;
         if (*p_serial==ID_ARRAY)
@@ -1936,6 +1949,12 @@ void safe_read_64uint(mwSize* dst, _uint64* src, size_t n) {
             mexErrMsgTxt("This dataset exceeds the size limitations of the current platform (e.g. reading huge matrices on 32 bit machines)");
         else
             dst[i] = (mwSize)(val & castMask);
+    }
+}
+
+void safe_read_32uint(mwSize* dst, _uint32* src, size_t n) {
+    for (size_t i=0; i < n; ++i) {
+            dst[i] = mwSize(src[i]);
     }
 }
 
@@ -2005,7 +2024,7 @@ mxArray* deserialize(const char* rpSerial, const size_t rlength) {
         // read the length in bytes
         mwSize len;
         size_t lenLong;
-        READ_UINT64(&len, p_serial);
+        READ_UINT(&len, p_serial);
         char* p_cmp = (char*)mxCalloc(len, sizeof(char));
         lenLong=len;
         try {
