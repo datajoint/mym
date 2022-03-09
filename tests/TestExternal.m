@@ -113,9 +113,9 @@ classdef TestExternal < Prep
             data.sides = 'llllrrl';
             data.hits = [NaN,1,1,0,1,0,NaN];
 
-            setenv('USE_32BIT_DIMS', 'true');
+            setenv('MYM_USE_32BIT_DIMS', 'true');
             unpacked = mym('deserialize', packed);
-            setenv('USE_32BIT_DIMS', 'false');
+            setenv('MYM_USE_32BIT_DIMS', 'false');
  
             testCase.verifyEqual(unpacked, data);
         end

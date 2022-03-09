@@ -360,11 +360,11 @@ static void updateplugindir() {
 }
 /**********************************************************************
  *use32bitdims():   Check if dimensions should be read as 32-bit
- *  Get USE_32_BIT_DIMS environment variable
- *  Return true/false based on USE_32_BIT_DIMS flag
+ *  Get MYM_USE_32BIT_DIMS environment variable
+ *  Return true/false based on MYM_USE_32BIT_DIMS flag
  **********************************************************************/
 static bool use32bitdims() {
-    return getenv("USE_32BIT_DIMS") && strcasecmp(getenv("USE_32BIT_DIMS"), "true") == 0;
+    return getenv("MYM_USE_32BIT_DIMS") && strcasecmp(getenv("MYM_USE_32BIT_DIMS"), "true") == 0;
 }
 /**********************************************************************
  * mysql():  Execute the actual action
