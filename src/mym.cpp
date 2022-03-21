@@ -52,8 +52,13 @@ typedef size_t mwIndex;
 
 //The crazy do{}while(0) constructions circumvents unexpected results when using the macro followed by a semicolon in
 //an if/else construction
-#define READ_UINT64(dst,src) do{ safe_read_64uint( (dst), (_uint64*)(src), 1 );   (src) += sizeof(_uint64);  } while(0)
-#define READ_UINT64S(dst,src,n) do{ safe_read_64uint( (dst), (_uint64*)(src), n );   (src) += (n) * sizeof(_uint64);  } while(0)
+#define READ_UINT(dst,src) \
+    if (use32bitdims()) do{ safe_read_32uint( (dst), (_uint32*)(src), 1 );   (src) += sizeof(_uint32);  } while(0); \
+    else do{ safe_read_64uint( (dst), (_uint64*)(src), 1 );   (src) += sizeof(_uint64);  } while(0)
+#define READ_UINTS(dst,src,n) \
+    if (use32bitdims()) do{ safe_read_32uint( (dst), (_uint32*)(src), n );   (src) += (n) * sizeof(_uint32);  } while(0); \
+    else do{ safe_read_64uint( (dst), (_uint64*)(src), n );   (src) += (n) * sizeof(_uint64);  } while(0)
+
 // Macro to write fixed size 64 bit uints
 #define WRITE_UINT64(p,val) do{  *((_uint64*)(p)) = (_uint64)(val);    (p) += sizeof(_uint64);  }while(0)
 #define WRITE_UINT64S(p,val,n) do{     _uint64* pTemp = (_uint64*) (p); \
@@ -354,7 +359,15 @@ static void updateplugindir() {
     mxDestroyArray(mym_fileparts[2]);
 }
 /**********************************************************************
- *mysql():  Execute the actual action
+ *use32bitdims():   Check if dimensions should be read as 32-bit
+ *  Get MYM_USE_32BIT_DIMS environment variable
+ *  Return true/false based on MYM_USE_32BIT_DIMS flag
+ **********************************************************************/
+static bool use32bitdims() {
+    return getenv("MYM_USE_32BIT_DIMS") && strcasecmp(getenv("MYM_USE_32BIT_DIMS"), "true") == 0;
+}
+/**********************************************************************
+ * mysql():  Execute the actual action
  * Which action we perform is based on the first input argument,
  * which must be present and must be a character string:
  *   'open', 'close', 'use', 'status', or a legitimate MySQL query.
@@ -399,7 +412,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
     /*********************************************************************/
     //  Parse the result based on the first argument
     enum querytype { OPEN, CLOSE, CLOSE_ALL, USE, STATUS, CMD, SERIALIZE, DESERIALIZE, VERSION } q;
-    char*query = NULL;
+    char* query = NULL;
     if (nrhs<=jarg)
         q = STATUS;
     else {
@@ -694,11 +707,11 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         }
         //******************PLACEHOLDER PROCESSING******************
         // global placeholders variables and constant
-        const unsigned nex = nrhs-jarg-1;   // expected number of placeholders
+        const unsigned expectedNumberOfPlaceholders = nrhs-jarg-1;   // expected number of placeholders
         unsigned query_flags = 0;
         unsigned nb_flags = 0;
         unsigned nac = 0;                                   // actual number
-        size_t lq = strlen(query);  // original query length, needed at some point
+        size_t lengthOfQuery = strlen(query);  // Length of the query which is needed for mysql_real_query later
         // Check for presence of query flags. This needs to be expanded once we have additional flags
         for (int i=nrhs-1; i > jarg; --i) {
             if (mxIsChar(prhs[i]) && (strcasecmp(getstring(prhs[i]), ML_FLAG_BIGINT_TO_DOUBLE)==0)) {
@@ -709,7 +722,8 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             }
         }
 
-        if (nex) {
+        // If there is placeholders, parse them accordingly
+        if (expectedNumberOfPlaceholders) {
             // local placeholders variables and constant
             char** po = 0;                              // pointer to placeholders openning symbols
             char** pc = 0;                              // pointer to placeholders closing symbols
@@ -718,10 +732,10 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             unsigned* ps = 0;                           // pointer to placeholders size (in bytes)
             pfserial* pf = 0;                           // pointer to serialization function
             // LOOK FOR THE PLACEHOLDERS
-            po = (char**)mxCalloc(nex+1, sizeof(char*));
-            pc = (char**)mxCalloc(nex+1, sizeof(char*));
+            po = (char**)mxCalloc(expectedNumberOfPlaceholders+1, sizeof(char*));
+            pc = (char**)mxCalloc(expectedNumberOfPlaceholders+1, sizeof(char*));
             if ((po[nac++] = strstr(query, PH_OPEN)))
-                while (po[nac-1]&&nac<=nex) {
+                while (po[nac-1]&&nac<=expectedNumberOfPlaceholders) {
                     pc[nac-1] = strstr(po[nac-1]+1, PH_CLOSE);
                     if (pc[nac-1]==0)
                         mexErrMsgTxt("Placeholders are not correctly closed!");
@@ -730,10 +744,10 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                 }
             nac--;
             // Adjust placeholders based on the number of flags present
-            if ((nac < nex) && (nac >= (nex-nb_flags))) {
-                nb_flags = nex-nac;
+            if ((nac < expectedNumberOfPlaceholders) && (nac >= (expectedNumberOfPlaceholders-nb_flags))) {
+                nb_flags = expectedNumberOfPlaceholders-nac;
             }
-            else if (nac != nex) {
+            else if (nac != expectedNumberOfPlaceholders) {
                 mexErrMsgTxt("The number of placeholders differs from that of additional arguments!");
             }
             // now we have the correct number of placeholders
@@ -789,7 +803,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                 nb += plen[i];
             }
             // create new query
-            char* nq = (char*)mxCalloc(2*nb+lq+1, sizeof(char));  // new query
+            char* nq = (char*)mxCalloc(2*nb+lengthOfQuery+1, sizeof(char));  // new query
             char* pnq = nq; // running pointer to new query
             const char* poq = query; // running pointer to old query
             for (unsigned i = 0; i<nac; i++) {
@@ -800,12 +814,12 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                 pd[i]=NULL;
                 mxFree(pd[i]);
             }
-            memcpy(pnq, poq, lq-(poq-query)+1);
+            memcpy(pnq, poq, lengthOfQuery-(poq-query)+1);
             // replace the old query by the new one
-            pnq += lq-(poq-query)+1;
+            pnq += lengthOfQuery-(poq-query)+1;
             mxFree(query);
             query = nq;
-            lq = (ulong)(pnq-nq);
+            lengthOfQuery = (ulong)(pnq-nq);
             mxFree(po);
             mxFree(pc);
             mxFree(pec);
@@ -816,13 +830,51 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             if (pcmp!=NULL)
                 mxFree(pcmp);
         }
-        else {
-            // check that no placeholders are present in the query
-            char*p_tmp_o = strstr(query, PH_OPEN);
-            char*p_tmp_c = strstr(query, PH_CLOSE);
-            if (p_tmp_o||p_tmp_c)
-                mexErrMsgTxt("The query contains placeholders, but no additional arguments!");
+        
+        // Remove any white spaces at the beginning (NOTE for some reason mxFree crashes if this runs before it gets to the CMD block)
+        removeWhiteSpaceAtTheBeginning(query);
+        lengthOfQuery = strlen(query);
+
+        // Check if it is Create or Alter, if so then do curely bracket parsing
+        if (isSubstringFountAtTheBeginningCaseInsenstive(query, "CREATE") || isSubstringFountAtTheBeginningCaseInsenstive(query, "ALTER"))
+        {
+             // Check that no placeholders are present in the query except for \{ and \}
+            char* parsedQueryString = (char*)mxCalloc(strlen(query), sizeof(char)); // Query string with escape character removed
+            size_t parsedQueryStringCurrentIndex = 0;
+
+            // Loop through the query string character by character
+            for (size_t i = 0; query[i] != '\0'; i++) {
+                
+                if ((query[i] == '{' || query[i] == '}') && i != 0) {
+                    if (query[i - 1] != '\\') {
+                        // Curley bracket doesn't seem to be escaped thus throw and error
+                        mxFree(parsedQueryString);
+                        mexErrMsgTxt("The query contains placeholders, but no additional arguments!");
+                    }
+                    else {
+                        // Valid curley bracket thus add it to the parsedQueryString with the \ removed
+                        parsedQueryStringCurrentIndex--;
+                        parsedQueryString[parsedQueryStringCurrentIndex] = query[i];
+                    }
+                }
+                else {
+                    // Non curley bracket thus add it to the parsedQueryString
+                    parsedQueryString[parsedQueryStringCurrentIndex] = query[i];
+                }
+
+                // Increment the currentIndex counter
+                parsedQueryStringCurrentIndex++;
+            }
+            // Add ending character
+            parsedQueryString[parsedQueryStringCurrentIndex] = '\0';
+
+            // Update the query string
+            mxFree(query); // Free up the old string allocation
+            query = parsedQueryString;
+            lengthOfQuery = strlen(query); // Update the length of the query
+            
         }
+       
         // Process flags
         for (int i=nrhs-nb_flags; i < nrhs; ++i) {
             if  (strcasecmp(getstring(prhs[i]), ML_FLAG_BIGINT_TO_DOUBLE)==0) {
@@ -832,7 +884,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
 
         //  Execute the query (data stays on server)
         if (nac!=0) {
-            if (mysql_real_query(conn, query, lq))
+            if (mysql_real_query(conn, query, lengthOfQuery))
                 mexErrMsgTxt(mysql_error(conn));
         }
         else if (mysql_query(conn, query))
@@ -980,14 +1032,14 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
         // serialize the matlab variable, it can be an array, cell, struct etc
         //******************PLACEHOLDER PROCESSING******************
         // global placeholders variables and constant
-        const unsigned nex = nrhs-jarg-1;   // expected number of placeholders
+        const unsigned expectedNumberOfPlaceholders = nrhs-jarg-1;   // expected number of placeholders
         unsigned query_flags = 0;
         unsigned nb_flags = 0;
         unsigned nac = 0;                                   // actual number
         if (debug)
-            mexPrintf("Num of args = %d\n", (int) nex) ;
+            mexPrintf("Num of args = %d\n", (int) expectedNumberOfPlaceholders) ;
 
-        if (nex) {
+        if (expectedNumberOfPlaceholders) {
             // local placeholders variables and constant
             char** po = 0;                      // pointer to placeholders openning symbols
             char** pc = 0;                      // pointer to placeholders closing symbols
@@ -996,10 +1048,10 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
             unsigned* ps = 0;                   // pointer to placeholders size (in bytes)
             pfserial* pf = 0;                   // pointer to serialization function
             // LOOK FOR THE PLACEHOLDERS
-            po = (char**)mxCalloc(nex+1, sizeof(char*));
-            pc = (char**)mxCalloc(nex+1, sizeof(char*));
+            po = (char**)mxCalloc(expectedNumberOfPlaceholders+1, sizeof(char*));
+            pc = (char**)mxCalloc(expectedNumberOfPlaceholders+1, sizeof(char*));
             if ((po[nac++] = strstr(query, PH_OPEN)))
-            while (po[nac-1]&&nac<=nex) {
+            while (po[nac-1]&&nac<=expectedNumberOfPlaceholders) {
                 pc[nac-1] = strstr(po[nac-1]+1, PH_CLOSE);
                 if (pc[nac-1]==0)
                     mexErrMsgIdAndTxt("mYm:Serialization:Placeholders",
@@ -1008,7 +1060,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                 nac++;
             }
             nac--; // utilized to find {}s
-            if (nac != nex) {
+            if (nac != expectedNumberOfPlaceholders) {
                 mexErrMsgIdAndTxt("mYm:Serialization:Placeholders",
                     "The number of placeholders differs from that of additional arguments!");
             }
@@ -1127,7 +1179,7 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
                 "There must be only one input and one output variable\n");
         }
     }
-    else if (q == VERSION) {
+    else if (q==VERSION) {
         if (nrhs > (jarg+1))
             mexErrMsgTxt("Version command does not take additional inputs");
         if (nlhs == 0) {
@@ -1150,6 +1202,58 @@ void mexFunction(int nlhs, mxArray*plhs[], int nrhs, const mxArray*prhs[]) {
     }
 }
 
+void removeWhiteSpaceAtTheBeginning(char* string) 
+{
+    // Do a quick check at the start to see if any work needs to be done
+    if (!strlen(string) || !isspace(string[0])) 
+    {
+        // The first character is not an empty space thus just return the orignal string
+        return;
+    }
+
+    // There are some white spaces that needs to be removed
+    size_t currentStringIndex = 1; // Offset of 1 due to the check at the beginning
+
+    // Loop through the string until a none whitespace character is found
+    for (; string[currentStringIndex] != '\0'; currentStringIndex++) 
+    {
+        if (string[currentStringIndex] != ' ') 
+        {
+            break;
+        }
+    }
+
+    char* sanitizeString = (char*)mxCalloc(strlen(string), sizeof(char));
+    size_t sanitizeStringIndex = 0;
+    // Copy the rest of the string over
+    for (; string[currentStringIndex] != '\0'; currentStringIndex++) 
+    {
+        sanitizeString[sanitizeStringIndex] = string[currentStringIndex];
+        sanitizeStringIndex++;
+    }
+
+    // Replace the string
+    mxFree(string); // Free up the old string allocation
+    string = sanitizeString;
+}
+
+/**
+ * Helper function for checking if string subString is found at the start of string sourceString
+ * @param sourceString Source string to find subString at the start
+ * @param subString String target to look at the beginning of sourceString
+ * @returns Boolean answer if subString was found at the start of sourceString
+ */
+bool isSubstringFountAtTheBeginningCaseInsenstive(const char* sourceString, const char* subString)
+{
+    for (size_t i = 0; subString[i] != '\0'; i++) 
+    {
+        if (tolower(sourceString[i]) != tolower(subString[i]))
+        {
+            return false;
+        }
+    }
+    return true;
+}
 
 /*************************************SERIALIZE******************************************/
 // Serialize a structure array
@@ -1423,7 +1527,6 @@ char* serializeArray(size_t &rnBytes, const mxArray *rpArray, const char *rpArg,
 
 
 
-
 // Serialize a sparse matrix
 char* serializeSparse(size_t &rnBytes, const mxArray *rpArray, 
                         const char *rpArg, const bool rhead) 
@@ -1637,11 +1740,11 @@ mxArray* deserializeArray(const char *rpSerial, const size_t rlength)
 
     // number of dimensions
     mwSize ndims;
-    READ_UINT64(&ndims, p_serial);
+    READ_UINT(&ndims, p_serial);
     
     // length of each dimension
     mwSize *pdims = (mwSize*) mxCalloc(ndims, sizeof(mwSize));
-    READ_UINT64S(pdims, p_serial, ndims);
+    READ_UINTS(pdims, p_serial, ndims);
     
     // classID
     mxClassID class_id;
@@ -1680,9 +1783,9 @@ mxArray* deserializeSparse(const char *rpSerial, const size_t rlength)
 
     // number of rows and columns
     mwSize rows, columns, nzmax;
-    READ_UINT64(&rows, p_serial);
-    READ_UINT64(&columns, p_serial);
-    READ_UINT64(&nzmax, p_serial);
+    READ_UINT(&rows, p_serial);
+    READ_UINT(&columns, p_serial);
+    READ_UINT(&nzmax, p_serial);
 
     // classID
     mxClassID class_id;
@@ -1706,11 +1809,11 @@ mxArray* deserializeSparse(const char *rpSerial, const size_t rlength)
 
     // JC data
     mwSize* pJcData = mxGetJc(p_array);
-    READ_UINT64S(pJcData, p_serial, columns+1);
+    READ_UINTS(pJcData, p_serial, columns+1);
     
     // size of IR array
     mwSize* pIrData = mxGetIr(p_array);
-    READ_UINT64S(pIrData, p_serial, nzmax);
+    READ_UINTS(pIrData, p_serial, nzmax);
     
     // real part data
     void* pdata = mxGetData(p_array);
@@ -1733,11 +1836,11 @@ mxArray* deserializeStruct(const char* rpSerial, const size_t rlength){
     const char*p_serial = rpSerial;
     // number of dimensions
     mwSize ndims;
-    READ_UINT64(&ndims, p_serial);
+    READ_UINT(&ndims, p_serial);
     
     // length of each dimension
     mwSize *pdims = (mwSize*) mxCalloc(ndims, sizeof(mwSize));
-    READ_UINT64S(pdims, p_serial, ndims);
+    READ_UINTS(pdims, p_serial, ndims);
     
     mwSize nelts = 1;
     for (int i = 0; i<ndims; i++)
@@ -1759,7 +1862,7 @@ mxArray* deserializeStruct(const char* rpSerial, const size_t rlength){
         for (int j = 0; j<nfields; j++) {
             mwSize nbytes1;
             size_t nbytes;
-            READ_UINT64(&nbytes1, p_serial);
+            READ_UINT(&nbytes1, p_serial);
             nbytes = nbytes1;
             mxArray* pf;
             if (*p_serial==ID_ARRAY)
@@ -1784,11 +1887,11 @@ mxArray* deserializeCell(const char* rpSerial, const size_t rlength){
     const char* p_serial = rpSerial;
     // number of dimensions
     mwSize ndims;
-    READ_UINT64(&ndims, p_serial);
+    READ_UINT(&ndims, p_serial);
     
     // length of each dimension
     mwSize *pdims = (mwSize*) mxCalloc(ndims, sizeof(mwSize));
-    READ_UINT64S(pdims, p_serial, ndims);
+    READ_UINTS(pdims, p_serial, ndims);
     
     mwSize nelts = 1;
     for (int i = 0; i<ndims; i++)
@@ -1799,7 +1902,7 @@ mxArray* deserializeCell(const char* rpSerial, const size_t rlength){
     for (int i = 0; i<nelts; i++){
         size_t nbytes;
         mwSize nbytes1;
-        READ_UINT64(&nbytes1, p_serial);
+        READ_UINT(&nbytes1, p_serial);
         nbytes=nbytes1;
         mxArray* pf;
         if (*p_serial==ID_ARRAY)
@@ -1846,6 +1949,12 @@ void safe_read_64uint(mwSize* dst, _uint64* src, size_t n) {
             mexErrMsgTxt("This dataset exceeds the size limitations of the current platform (e.g. reading huge matrices on 32 bit machines)");
         else
             dst[i] = (mwSize)(val & castMask);
+    }
+}
+
+void safe_read_32uint(mwSize* dst, _uint32* src, size_t n) {
+    for (size_t i=0; i < n; ++i) {
+            dst[i] = mwSize(src[i]);
     }
 }
 
@@ -1915,7 +2024,7 @@ mxArray* deserialize(const char* rpSerial, const size_t rlength) {
         // read the length in bytes
         mwSize len;
         size_t lenLong;
-        READ_UINT64(&len, p_serial);
+        READ_UINT(&len, p_serial);
         char* p_cmp = (char*)mxCalloc(len, sizeof(char));
         lenLong=len;
         try {
