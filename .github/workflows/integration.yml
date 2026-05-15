@@ -1,13 +1,11 @@
 name: Integration Tests
+# Manual trigger only. The MATLAB-in-Docker integration flow depends on external
+# images (raphaelguzman/matlab:*-MIN), an org-level MATLAB license, and a matrix
+# pinned to R2018b/R2019a + MySQL 5.6/5.7/8.0.18 — none of which cover the
+# platforms users care about today (Apple Silicon, MySQL 8.4 LTS). Re-enable
+# only after the test stack is modernised.
 on:
-  push:
-    branches:
-      - '**' # every branch
-      - '!stage*' # exclude branches beginning with stage
-  pull_request:
-    branches:
-      - '**' # every branch
-      - '!stage*' # exclude branches beginning with stage
+  workflow_dispatch:
 jobs:
   CI:
     if: github.event_name == 'push' || github.event_name == 'pull_request'
@@ -22,7 +20,7 @@ jobs:
           # - matlab_version: "R2016b"
           #   mysql_version: "5.7"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Run primary tests
         env:
           MATLAB_UID: "1001"
@@ -35,4 +33,4 @@ jobs:
           DOCKER_CLIENT_TIMEOUT: "120"
           COMPOSE_HTTP_TIMEOUT: "120"
         run: |
-          docker-compose -f LNX-docker-compose.yml up --build --exit-code-from app
+          docker compose -f LNX-docker-compose.yml up --build --exit-code-from app

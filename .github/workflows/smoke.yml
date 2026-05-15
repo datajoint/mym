@@ -1,0 +1,36 @@
+name: Smoke Check
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+jobs:
+  artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify mex binaries are present for all four architectures
+        run: |
+          set -e
+          for arch in mexa64 mexw64 mexmaci64 mexmaca64; do
+            bin="distribution/$arch/mym.$arch"
+            if [ ! -s "$bin" ]; then
+              echo "Missing or empty: $bin"
+              exit 1
+            fi
+            echo "OK: $bin ($(stat -c%s "$bin") bytes)"
+          done
+      - name: Verify version constants parse in src/mym.h
+        run: |
+          set -e
+          major=$(grep -E '^#define\s+MYM_VERSION_MAJOR\s+[0-9]+' src/mym.h | awk '{print $3}')
+          minor=$(grep -E '^#define\s+MYM_VERSION_MINOR\s+[0-9]+' src/mym.h | awk '{print $3}')
+          bugfix=$(grep -E '^#define\s+MYM_VERSION_BUGFIX\s+[0-9]+' src/mym.h | awk '{print $3}')
+          if [ -z "$major" ] || [ -z "$minor" ] || [ -z "$bugfix" ]; then
+            echo "Version constants missing or unparseable in src/mym.h"
+            exit 1
+          fi
+          echo "Embedded version: $major.$minor.$bugfix"
+      - name: Verify packaging entrypoint is present
+        run: |
+          test -s mktbx.m && echo "OK: mktbx.m"
