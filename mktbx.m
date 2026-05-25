@@ -17,11 +17,11 @@ function tbx = mktbx(varargin)
   %            'mex_compilation', 'mysql-connector', 'notebook', 'src', 'zlib', ...
   %            '*.txt', '*.env', '*.prf', '*.md', '*.yml', 'tests', '.github'};
   d = dir(pwd);
-  exclude = {d(~endsWith({d.name},'distribution')).name};
+  exclude = {d(~endsWith({d.name},{'.', '..', 'mym.m', 'distribution'})).name};
 
   d = dir('distribution');
   % include = {d(~startsWith({d.name},".")).name};
-  include = fullfile('distribution',{d(~startsWith({d.name},".")).name});
+  include = ['mym.m', fullfile('distribution',{d(~startsWith({d.name},".")).name})];
 
   ghtb.package('mym', ...
                'Raphael Guzman', ...
@@ -34,7 +34,7 @@ function tbx = mktbx(varargin)
                            '.'), ...
                include, ...
                'toolboxVersionDir', fullfile('distribution',mexext()), ...
-               'toolboxRootDir', pwd);
+               'toolboxRootDir', '.', 'toolboxProjectDir', '.');
 
   tbx = [];
   if install
